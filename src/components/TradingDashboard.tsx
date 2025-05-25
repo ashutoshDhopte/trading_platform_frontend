@@ -1,0 +1,235 @@
+import { useState, useEffect } from 'react';
+
+const TradingDashboard = () => {
+  
+  
+
+  const [stockData, setStockData] = useState([
+    { symbol: 'AAPL', name: 'Apple Inc.', price: 189.45, change: 2.34, changePercent: 1.25 },
+    { symbol: 'GOOGL', name: 'Alphabet Inc.', price: 2745.80, change: 45.20, changePercent: 1.67 },
+    { symbol: 'TSLA', name: 'Tesla Inc.', price: 247.85, change: -8.15, changePercent: -3.18 },
+    { symbol: 'MSFT', name: 'Microsoft Corp.', price: 378.90, change: 12.45, changePercent: 3.40 },
+    { symbol: 'NVDA', name: 'NVIDIA Corp.', price: 445.20, change: 23.80, changePercent: 5.65 }
+  ]);
+
+  const [holdings] = useState([
+    { symbol: 'AAPL', shares: 150, value: 28417.50, change: 351.00 },
+    { symbol: 'GOOGL', shares: 25, value: 68645.00, change: 1130.00 },
+    { symbol: 'MSFT', shares: 80, value: 30312.00, change: 996.00 }
+  ]);
+
+  const [watchlist] = useState([
+    { symbol: 'META', name: 'Meta Platforms', price: 325.40, changePercent: 2.1 },
+    { symbol: 'AMZN', name: 'Amazon.com', price: 145.80, changePercent: -0.8 },
+    { symbol: 'NFLX', name: 'Netflix Inc.', price: 485.30, changePercent: 1.4 }
+  ]);
+
+  const [tradeSymbol, setTradeSymbol] = useState('');
+  const [tradeQuantity, setTradeQuantity] = useState('');
+
+  // Simulate real-time price updates
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     setStockData(prevData => 
+  //       prevData.map(stock => {
+  //         const change = (Math.random() - 0.5) * 10;
+  //         const newPrice = Math.max(stock.price + change, 1);
+  //         const changePercent = ((change / stock.price) * 100);
+          
+  //         return {
+  //           ...stock,
+  //           price: parseFloat(newPrice.toFixed(2)),
+  //           change: parseFloat(change.toFixed(2)),
+  //           changePercent: parseFloat(changePercent.toFixed(2))
+  //         };
+  //       })
+  //     );
+  //   }, 3000);
+
+  //   return () => clearInterval(interval);
+  // }, []);
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  };
+
+  const StockItem = ({ stock, onClick }) => (
+    <div 
+      className="flex justify-between items-center p-4 bg-white/[0.03] rounded-xl border border-white/5 transition-all duration-300 cursor-pointer hover:bg-white/8 hover:border-white/15"
+      onClick={onClick}
+    >
+      <div className="flex items-center gap-3">
+        <div>
+          <div className="font-bold text-base">{stock.symbol}</div>
+          <div className="text-white/70 text-sm">{stock.name}</div>
+        </div>
+      </div>
+      <div className="text-right">
+        <div className="font-bold text-base">{formatCurrency(stock.price)}</div>
+        <div className={`text-sm mt-1 ${stock.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+          {stock.change >= 0 ? '+' : ''}{formatCurrency(stock.change)} ({stock.changePercent >= 0 ? '+' : ''}{stock.changePercent}%)
+        </div>
+      </div>
+    </div>
+  );
+
+  const HoldingItem = ({ holding }) => (
+    <div className="flex justify-between items-center py-4 border-b border-white/5 last:border-b-0">
+      <div className="flex flex-col gap-1">
+        <div className="font-bold">{holding.symbol}</div>
+        <div className="text-white/70 text-sm">{holding.shares} shares</div>
+      </div>
+      <div className="text-right">
+        <div className="font-bold">{formatCurrency(holding.value)}</div>
+        <div className={`text-sm ${holding.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+          {holding.change >= 0 ? '+' : ''}{formatCurrency(holding.change)}
+        </div>
+      </div>
+    </div>
+  );
+
+  const WatchlistItem = ({ item }) => (
+    <div className="flex justify-between items-center py-3 border-b border-white/5 last:border-b-0">
+      <div>
+        <div className="font-bold">{item.symbol}</div>
+        <div className="text-white/70 text-sm">{item.name}</div>
+      </div>
+      <div className="text-right">
+        <div className="font-bold">{formatCurrency(item.price)}</div>
+        <div className={`text-sm ${item.changePercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+          {item.changePercent >= 0 ? '+' : ''}{item.changePercent}%
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <section className="relative section-padding flex min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-indigo-900 text-white">
+      
+      <div className="max-w-7xl mx-auto p-5 mt-35">
+
+        {/* Market Status */}
+        <div className="flex items-center gap-2 p-3 bg-green-400/10 border border-green-400/30 rounded-lg mb-8">
+          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+          <span>Market Open • NYSE • Last updated: 2 seconds ago</span>
+        </div>
+
+        {/* Portfolio Stats */}
+        <div className="grid grid-cols-3 gap-5 mb-8">
+          <div className="bg-white/5 p-5 rounded-xl border border-white/10 text-center">
+            <div className="text-3xl font-bold text-green-400 mb-2">$89,234.50</div>
+            <div className="text-white/70">Portfolio Value</div>
+          </div>
+          <div className="bg-white/5 p-5 rounded-xl border border-white/10 text-center">
+            <div className="text-3xl font-bold text-green-400 mb-2">+$2,845.30</div>
+            <div className="text-white/70">Today's P&L</div>
+          </div>
+          <div className="bg-white/5 p-5 rounded-xl border border-white/10 text-center">
+            <div className="text-3xl font-bold text-green-400 mb-2">+18.2%</div>
+            <div className="text-white/70">Total Return</div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Left Panel - 2/3 width */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Market Overview */}
+            <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-xl hover:transform hover:-translate-y-1 transition-all duration-300 hover:border-white/20 hover:shadow-2xl">
+              <div className="flex justify-between items-center mb-5">
+                <h3 className="text-xl font-semibold">Market Overview</h3>
+                <div className="w-5 h-5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+              <div className="space-y-3">
+                {stockData.map((stock) => (
+                  <StockItem 
+                    key={stock.symbol} 
+                    stock={stock} 
+                    onClick={() => console.log(`Clicked ${stock.symbol}`)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Chart */}
+            <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-xl hover:transform hover:-translate-y-1 transition-all duration-300 hover:border-white/20 hover:shadow-2xl">
+              <h3 className="text-xl font-semibold mb-5">Portfolio Performance</h3>
+              <div className="h-80 bg-white/[0.02] rounded-xl bg-gradient-to-br from-cyan-400/10 to-purple-500/10 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">📈</div>
+                  <div className="text-lg text-white/60">Interactive Chart Coming Soon</div>
+                  <div className="text-sm text-white/40 mt-2">Real-time portfolio performance visualization</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Panel - 1/3 width */}
+          <div className="space-y-5">
+            {/* Holdings */}
+            <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-xl hover:transform hover:-translate-y-1 transition-all duration-300 hover:border-white/20 hover:shadow-2xl">
+              <h3 className="text-xl font-semibold mb-5">My Holdings</h3>
+              <div>
+                {holdings.map((holding) => (
+                  <HoldingItem key={holding.symbol} holding={holding} />
+                ))}
+              </div>
+              <div className="flex gap-3 mt-5">
+                <button className="flex-1 py-3 px-6 bg-gradient-to-r from-green-400 to-cyan-400 text-black rounded-lg font-semibold hover:transform hover:-translate-y-1 transition-all duration-300 hover:shadow-lg">
+                  Buy More
+                </button>
+                <button className="flex-1 py-3 px-6 bg-red-500/20 text-red-400 border border-red-500 rounded-lg font-semibold hover:bg-red-500 hover:text-white transition-all duration-300">
+                  Sell
+                </button>
+              </div>
+            </div>
+
+            {/* Watchlist */}
+            <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-xl hover:transform hover:-translate-y-1 transition-all duration-300 hover:border-white/20 hover:shadow-2xl">
+              <h3 className="text-xl font-semibold mb-5">Watchlist</h3>
+              <div>
+                {watchlist.map((item) => (
+                  <WatchlistItem key={item.symbol} item={item} />
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Trade */}
+            <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-xl hover:transform hover:-translate-y-1 transition-all duration-300 hover:border-white/20 hover:shadow-2xl">
+              <h3 className="text-xl font-semibold mb-5">Quick Trade</h3>
+              <div className="space-y-4">
+                <input
+                  type="text"
+                  placeholder="Enter symbol (e.g., AAPL)"
+                  value={tradeSymbol}
+                  onChange={(e) => setTradeSymbol(e.target.value)}
+                  className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-cyan-400 focus:outline-none transition-colors"
+                />
+                <input
+                  type="number"
+                  placeholder="Quantity"
+                  value={tradeQuantity}
+                  onChange={(e) => setTradeQuantity(e.target.value)}
+                  className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-cyan-400 focus:outline-none transition-colors"
+                />
+                <div className="flex gap-3">
+                  <button className="flex-1 py-3 px-6 bg-gradient-to-r from-green-400 to-cyan-400 text-black rounded-lg font-semibold hover:transform hover:-translate-y-1 transition-all duration-300 hover:shadow-lg">
+                    Buy
+                  </button>
+                  <button className="flex-1 py-3 px-6 bg-red-500/20 text-red-400 border border-red-500 rounded-lg font-semibold hover:bg-red-500 hover:text-white transition-all duration-300">
+                    Sell
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default TradingDashboard;
