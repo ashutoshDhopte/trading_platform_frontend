@@ -10,7 +10,7 @@ const Navbar = () => {
 
             <header className="flex flex-col lg:flex-row justify-between items-center py-5 border-b border-white/10 gap-5">
                 <div className="text-3xl font-extrabold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
-                    TradeFlow Pro
+                    trade/sim
                 </div>
                 
                 <nav className="flex gap-8">
