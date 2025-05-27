@@ -1,28 +1,22 @@
+import { getDashboardData } from '@/lib/api';
+import { Dashboard, Holding, Stock, User } from '@/type/model';
 import { useState, useEffect } from 'react';
 
 const TradingDashboard = () => {
   
   
 
-  const [stockData, setStockData] = useState([
-    { symbol: 'AAPL', name: 'Apple Inc.', price: 189.45, change: 2.34, changePercent: 1.25 },
-    { symbol: 'GOOGL', name: 'Alphabet Inc.', price: 2745.80, change: 45.20, changePercent: 1.67 },
-    { symbol: 'TSLA', name: 'Tesla Inc.', price: 247.85, change: -8.15, changePercent: -3.18 },
-    { symbol: 'MSFT', name: 'Microsoft Corp.', price: 378.90, change: 12.45, changePercent: 3.40 },
-    { symbol: 'NVDA', name: 'NVIDIA Corp.', price: 445.20, change: 23.80, changePercent: 5.65 }
-  ]);
+  const [stocks, setStocks] = useState<Stock[]>([]);
 
-  const [holdings] = useState([
-    { symbol: 'AAPL', shares: 150, value: 28417.50, change: 351.00 },
-    { symbol: 'GOOGL', shares: 25, value: 68645.00, change: 1130.00 },
-    { symbol: 'MSFT', shares: 80, value: 30312.00, change: 996.00 }
-  ]);
+  const [holdings, setHoldings] = useState<Holding[]>([]);
 
-  const [watchlist] = useState([
-    { symbol: 'META', name: 'Meta Platforms', price: 325.40, changePercent: 2.1 },
-    { symbol: 'AMZN', name: 'Amazon.com', price: 145.80, changePercent: -0.8 },
-    { symbol: 'NFLX', name: 'Netflix Inc.', price: 485.30, changePercent: 1.4 }
-  ]);
+  const [user, setUser] = useState<User>()
+
+  // const [watchlist] = useState([
+  //   { symbol: 'META', name: 'Meta Platforms', price: 325.40, changePercent: 2.1 },
+  //   { symbol: 'AMZN', name: 'Amazon.com', price: 145.80, changePercent: -0.8 },
+  //   { symbol: 'NFLX', name: 'Netflix Inc.', price: 485.30, changePercent: 1.4 }
+  // ]);
 
   const [tradeSymbol, setTradeSymbol] = useState('');
   const [tradeQuantity, setTradeQuantity] = useState('');
@@ -63,14 +57,14 @@ const TradingDashboard = () => {
     >
       <div className="flex items-center gap-3">
         <div>
-          <div className="font-bold text-base">{stock.symbol}</div>
-          <div className="text-white/70 text-sm">{stock.name}</div>
+          <div className="font-bold text-base">{stock.Ticker}</div>
+          <div className="text-white/70 text-sm">{stock.Name}</div>
         </div>
       </div>
       <div className="text-right">
-        <div className="font-bold text-base">{formatCurrency(stock.price)}</div>
-        <div className={`text-sm mt-1 ${stock.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-          {stock.change >= 0 ? '+' : ''}{formatCurrency(stock.change)} ({stock.changePercent >= 0 ? '+' : ''}{stock.changePercent}%)
+        <div className="font-bold text-base">{formatCurrency(stock.OpeningPriceDollars)}</div>
+        <div className={`text-sm mt-1 ${stock.ChangedPriceDollars >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+          {stock.ChangedPriceDollars >= 0 ? '+' : ''}{formatCurrency(stock.ChangedPercent)} ({stock.ChangePercent >= 0 ? '+' : ''}{stock.ChangedPercent}%)
         </div>
       </div>
     </div>
@@ -79,14 +73,14 @@ const TradingDashboard = () => {
   const HoldingItem = ({ holding }) => (
     <div className="flex justify-between items-center py-4 border-b border-white/5 last:border-b-0">
       <div className="flex flex-col gap-1">
-        <div className="font-bold">{holding.symbol}</div>
-        <div className="text-white/70 text-sm">{holding.shares} shares</div>
+        <div className="font-bold">{holding.StockTicker}</div>
+        <div className="text-white/70 text-sm">{holding.Quantity} shares</div>
       </div>
       <div className="text-right">
-        <div className="font-bold">{formatCurrency(holding.value)}</div>
-        <div className={`text-sm ${holding.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+        <div className="font-bold">{formatCurrency(holding.TotalValueDollars)}</div>
+        {/* <div className={`text-sm ${holding.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
           {holding.change >= 0 ? '+' : ''}{formatCurrency(holding.change)}
-        </div>
+        </div> */}
       </div>
     </div>
   );
@@ -105,6 +99,24 @@ const TradingDashboard = () => {
       </div>
     </div>
   );
+
+
+
+  useEffect(() => {
+    const getData = async () => {
+      const data = await getDashboardData(1);
+      if(data == null){
+        console.error('Failed to fetch dashboard data');
+        return;
+      }
+      setUser(data.User == null ? new User(0, '', '', 0, new Date(), new Date()) : data.User);
+      setStocks(data.Stocks == null ? [] : data.Stocks);
+      setHoldings(data.Holdings == null ? [] : data.Holdings);
+    };
+
+    getData();
+  }, []);
+
 
   return (
     <section className="relative section-padding flex min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-indigo-900 text-white">
@@ -144,11 +156,11 @@ const TradingDashboard = () => {
                 <div className="w-5 h-5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
               </div>
               <div className="space-y-3">
-                {stockData.map((stock) => (
+                {stocks.map((stock) => (
                   <StockItem 
-                    key={stock.symbol} 
+                    key={stock.Ticker} 
                     stock={stock} 
-                    onClick={() => console.log(`Clicked ${stock.symbol}`)}
+                    onClick={() => console.log(`Clicked ${stock.Ticker}`)}
                   />
                 ))}
               </div>
@@ -174,7 +186,7 @@ const TradingDashboard = () => {
               <h3 className="text-xl font-semibold mb-5">My Holdings</h3>
               <div>
                 {holdings.map((holding) => (
-                  <HoldingItem key={holding.symbol} holding={holding} />
+                  <HoldingItem key={holding.StockTicker} holding={holding} />
                 ))}
               </div>
               <div className="flex gap-3 mt-5">
@@ -191,9 +203,9 @@ const TradingDashboard = () => {
             <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-xl hover:transform hover:-translate-y-1 transition-all duration-300 hover:border-white/20 hover:shadow-2xl">
               <h3 className="text-xl font-semibold mb-5">Watchlist</h3>
               <div>
-                {watchlist.map((item) => (
+                {/* {watchlist.map((item) => (
                   <WatchlistItem key={item.symbol} item={item} />
-                ))}
+                ))} */}
               </div>
             </div>
 
