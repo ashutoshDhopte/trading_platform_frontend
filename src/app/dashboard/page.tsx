@@ -1,3 +1,5 @@
+'use client';
+
 import { getDashboardData } from '@/lib/api';
 import { Dashboard, Holding, Stock, User } from '@/type/model';
 import { useState, useEffect } from 'react';
@@ -12,11 +14,7 @@ const TradingDashboard = () => {
 
   const [user, setUser] = useState<User>()
 
-  // const [watchlist] = useState([
-  //   { symbol: 'META', name: 'Meta Platforms', price: 325.40, changePercent: 2.1 },
-  //   { symbol: 'AMZN', name: 'Amazon.com', price: 145.80, changePercent: -0.8 },
-  //   { symbol: 'NFLX', name: 'Netflix Inc.', price: 485.30, changePercent: 1.4 }
-  // ]);
+  // const [watchlist, setWatchList] = useState([]);
 
   const [tradeSymbol, setTradeSymbol] = useState('');
   const [tradeQuantity, setTradeQuantity] = useState('');
@@ -109,7 +107,7 @@ const TradingDashboard = () => {
         console.error('Failed to fetch dashboard data');
         return;
       }
-      setUser(data.User == null ? new User(0, '', '', 0, new Date(), new Date()) : data.User);
+      setUser(data.User == null ? new User(0, '', '', 0, '', '') : data.User);
       setStocks(data.Stocks == null ? [] : data.Stocks);
       setHoldings(data.Holdings == null ? [] : data.Holdings);
     };

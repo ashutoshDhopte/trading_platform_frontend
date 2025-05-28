@@ -1,26 +1,14 @@
-'use client'
-
-import { useEffect, useState } from 'react';
-import TradingDashboard from '../components/TradingDashboard'
-import Navbar from '../components/Navbar'
-import { fetchStocks } from '../lib/api';
 
 
 export default function Home() {
 
-  const [stock, setStocks] = useState<string>();
-
-  useEffect(() => {
-    fetchStocks().then(setStocks).catch(console.error);
-  }, []);
-
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar/>
-      <main>
-        <h1>{stock}</h1>
-        <TradingDashboard/>
-      </main>
+    //redirect to /dashboard if user is logged in
+    <div className="bg-gray-900 text-white min-h-screen">
+      <div className="flex flex-col items-center justify-center h-screen">
+        <h1 className="text-4xl font-bold">Welcome to trade/sim</h1>
+        <p className="text-lg mt-4">Your trading simulation platform</p>
+      </div>
     </div>
   )
 }
