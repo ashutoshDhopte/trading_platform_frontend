@@ -1,23 +1,40 @@
 'use client';
 
-import { getDashboardData } from '@/lib/api';
-import { Dashboard, Holding, Stock, User } from '@/type/model';
+import { buyStocks, getDashboardData } from '@/lib/api';
+import { Holding, Stock } from '@/type/model';
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 const TradingDashboard = () => {
   
-  
+    const userId = Number(useSearchParams().get('userId'));
 
-  const [stocks, setStocks] = useState<Stock[]>([]);
+    const [stocks, setStocks] = useState<Stock[]>([]);
 
-  const [holdings, setHoldings] = useState<Holding[]>([]);
+    const [holdings, setHoldings] = useState<Holding[]>([]);
 
-  const [user, setUser] = useState<User>()
+    // const [watchlist, setWatchList] = useState([]);
 
-  // const [watchlist, setWatchList] = useState([]);
+    const [tradeSymbol, setTradeSymbol] = useState('');
+    const [tradeQuantity, setTradeQuantity] = useState('');
 
-  const [tradeSymbol, setTradeSymbol] = useState('');
-  const [tradeQuantity, setTradeQuantity] = useState('');
+    const quickTradeBuy = async () => {
+    if (!userId || !tradeSymbol || !tradeQuantity) return;
+    const quantity = parseInt(tradeQuantity);
+    if (isNaN(quantity) || quantity <= 0) {
+        console.error('Invalid quantity');
+        return;
+    }
+    const response = await buyStocks(userId, tradeSymbol, quantity);
+    if (response == "") {
+        console.log(`Bought ${quantity} shares of ${tradeSymbol}`);
+        // Optionally, refresh holdings or stocks after a successful trade
+        setTradeSymbol('');
+        setTradeQuantity('');
+    } else {
+        console.error('Failed to buy stocks: '+response);
+    }
+};
 
   // Simulate real-time price updates
   // useEffect(() => {
@@ -107,7 +124,6 @@ const TradingDashboard = () => {
         console.error('Failed to fetch dashboard data');
         return;
       }
-      setUser(data.User == null ? new User(0, '', '', 0, '', '') : data.User);
       setStocks(data.Stocks == null ? [] : data.Stocks);
       setHoldings(data.Holdings == null ? [] : data.Holdings);
     };
@@ -226,7 +242,7 @@ const TradingDashboard = () => {
                   className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-cyan-400 focus:outline-none transition-colors"
                 />
                 <div className="flex gap-3">
-                  <button className="flex-1 py-3 px-6 bg-gradient-to-r from-green-400 to-cyan-400 text-black rounded-lg font-semibold hover:transform hover:-translate-y-1 transition-all duration-300 hover:shadow-lg">
+                  <button className="flex-1 py-3 px-6 bg-gradient-to-r from-green-400 to-cyan-400 text-black rounded-lg font-semibold hover:transform hover:-translate-y-1 transition-all duration-300 hover:shadow-lg" onClick={quickTradeBuy}>
                     Buy
                   </button>
                   <button className="flex-1 py-3 px-6 bg-red-500/20 text-red-400 border border-red-500 rounded-lg font-semibold hover:bg-red-500 hover:text-white transition-all duration-300">

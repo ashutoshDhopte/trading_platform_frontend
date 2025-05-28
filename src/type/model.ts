@@ -35,8 +35,13 @@ export class Holding{
 
 export class Dashboard{
     constructor(
-        public User: User,
         public Stocks: Stock[],
         public Holdings: Holding[]
     ) {}
+}
+
+export interface ApiResponse {
+    Success: boolean;
+    Data?: unknown; // Can be User, Dashboard, or string for error messages
+    ErrorMessage?: string; // Error message if the transaction fails            
 }

@@ -1,12 +1,7 @@
-import { Dashboard, User } from '@/type/model';
+import { ApiResponse, Dashboard, User } from '@/type/model';
 import axios from 'axios';
 
 const API_BASE = 'http://localhost:8080/trade-sim';
-
-export const fetchStocks = async (): Promise<string> => {
-  const res = await axios.get(`${API_BASE}/test`);
-  return res.data.data;
-};
 
 export const getDashboardData = async (userId: number): Promise<Dashboard | null> => {
   const res = await axios.get(`${API_BASE}/dashboard`, {
@@ -14,8 +9,8 @@ export const getDashboardData = async (userId: number): Promise<Dashboard | null
                         userId: userId
                       }
                     });
-  const data = res.data;
-  if(data.Success){
+  const data = res.data as ApiResponse;
+  if(data.Success && data.Data){
     return data.Data as Dashboard;
   }
 
@@ -29,10 +24,26 @@ export const getUser = async (email: string, password: string): Promise<User | n
                         password: password
                       }
                     });
-  const data = res.data;
-  if(data.Success){
+  const data = res.data as ApiResponse;
+  console.log(res);
+  if(data.Success && data.Data){
     return data.Data as User;
   }
 
   return null;
+}
+
+export const buyStocks = async (userId: number, ticker: string, quantity: number): Promise<string> => {
+  const res = await axios.post(`${API_BASE}/buy-stocks`, {
+    userId: userId,
+    ticker: ticker,
+    quantity: quantity
+  });
+
+  const data = res.data as ApiResponse;
+  if(!data.Success){
+    return data.ErrorMessage ?? "";
+  }
+
+  return ""
 }

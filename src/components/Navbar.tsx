@@ -49,7 +49,10 @@ const Navbar = () => {
                         tabPaths.map((tab) => (
                             <Link 
                                 key={tab.name} 
-                                href={tab.path} 
+                                href={{
+                                    pathname: tab.path,
+                                    query: { userId: user?.UserID }
+                                }} 
                                 onClick={() => setActiveTab(tab.name)} 
                                 className={`py-3 border-b-2 transition-all duration-300 font-medium ${
                                     activeTab === tab.name 
