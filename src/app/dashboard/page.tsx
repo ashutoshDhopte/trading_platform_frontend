@@ -6,6 +6,10 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 const TradingDashboard = () => {
+
+    const reloadPage = () => {
+      window.location.reload();
+    };
   
     const userId = Number(useSearchParams().get('userId'));
 
@@ -31,6 +35,7 @@ const TradingDashboard = () => {
         // Optionally, refresh holdings or stocks after a successful trade
         setTradeSymbol('');
         setTradeQuantity('');
+        reloadPage()
     } else {
         console.error('Failed to buy stocks: '+response);
     }
