@@ -29,14 +29,21 @@ export class Holding{
         public Quantity: number,
         public AverageCostPerShareDollars: number,
         public TotalValueDollars: number,
+        public PnLDollars: number, 
+	    public PnLPercent: number, 
         public UpdatedAt: string
     ) {}
 }
 
 export class Dashboard{
     constructor(
+        public User: User,
         public Stocks: Stock[],
-        public Holdings: Holding[]
+        public Holdings: Holding[],
+        public TotalHoldingValueDollars: number,
+        public PortfolioValueDollars: number,
+        public TotalPnLDollars: number,
+        public TotalPnLPercent: number
     ) {}
 }
 

@@ -14,8 +14,11 @@ const TradingDashboard = () => {
     const userId = Number(useSearchParams().get('userId'));
 
     const [stocks, setStocks] = useState<Stock[]>([]);
-
     const [holdings, setHoldings] = useState<Holding[]>([]);
+    const [portfolioValue, setPortfolioValue] = useState(0.00);
+    const [totalPnL, setTotalPnL] = useState(0.00);
+    const [totalPnLPercent, setTotalPnLPercent] = useState(0.00);
+    const [totalHoldingValue, setTotalHoldingValue] = useState(0.00);
 
     // const [watchlist, setWatchList] = useState([]);
 
@@ -98,9 +101,9 @@ const TradingDashboard = () => {
       </div>
       <div className="text-right">
         <div className="font-bold">{formatCurrency(holding.TotalValueDollars)}</div>
-        {/* <div className={`text-sm ${holding.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-          {holding.change >= 0 ? '+' : ''}{formatCurrency(holding.change)}
-        </div> */}
+        <div className={`text-sm ${holding.PnLDollars >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+          {holding.PnLDollars >= 0 ? '+' : ''}{formatCurrency(holding.PnLDollars)} ({holding.PnLPercent >= 0 ? '+' : ''}{holding.PnLPercent.toFixed(2)}%)
+        </div> 
       </div>
     </div>
   );
@@ -131,6 +134,10 @@ const TradingDashboard = () => {
       }
       setStocks(data.Stocks == null ? [] : data.Stocks);
       setHoldings(data.Holdings == null ? [] : data.Holdings);
+      setPortfolioValue(data.PortfolioValueDollars || 0);
+      setTotalPnL(data.TotalPnLDollars || 0);
+      setTotalPnLPercent(data.TotalPnLPercent || 0);
+      setTotalHoldingValue(data.TotalHoldingValueDollars || 0);
     };
 
     getData();
@@ -151,15 +158,15 @@ const TradingDashboard = () => {
         {/* Portfolio Stats */}
         <div className="grid grid-cols-3 gap-5 mb-8">
           <div className="bg-white/5 p-5 rounded-xl border border-white/10 text-center">
-            <div className="text-3xl font-bold text-green-400 mb-2">$89,234.50</div>
+            <div className={`text-3xl font-bold ${portfolioValue >= 0 ? 'text-green-400' : 'text-red-400'} mb-2`}>{formatCurrency(portfolioValue)}</div>
             <div className="text-white/70">Portfolio Value</div>
           </div>
           <div className="bg-white/5 p-5 rounded-xl border border-white/10 text-center">
-            <div className="text-3xl font-bold text-green-400 mb-2">+$2,845.30</div>
+            <div className={`text-3xl font-bold ${totalPnL >= 0 ? 'text-green-400' : 'text-red-400'} mb-2`}>{totalPnL >= 0 ? '+' : ''}{formatCurrency(totalPnL)}</div>
             <div className="text-white/70">Today's P&L</div>
           </div>
           <div className="bg-white/5 p-5 rounded-xl border border-white/10 text-center">
-            <div className="text-3xl font-bold text-green-400 mb-2">+18.2%</div>
+            <div className={`text-3xl font-bold ${totalPnLPercent >= 0 ? 'text-green-400' : 'text-red-400'} mb-2`}>{totalPnLPercent >= 0 ? '+' : ''}{totalPnLPercent.toFixed(2)}%</div>
             <div className="text-white/70">Total Return</div>
           </div>
         </div>
@@ -202,7 +209,12 @@ const TradingDashboard = () => {
           <div className="space-y-5">
             {/* Holdings */}
             <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-xl hover:transform hover:-translate-y-1 transition-all duration-300 hover:border-white/20 hover:shadow-2xl">
-              <h3 className="text-xl font-semibold mb-5">My Holdings</h3>
+              <div className="mb-5 flex">
+                <div className="w-2/5">
+                  <h3 className="text-xl font-semibold">My Holdings</h3>
+                </div>
+                <div className="text-xl font-semibold w-3/5 text-right">{formatCurrency(totalHoldingValue)}</div>
+              </div>
               <div>
                 {holdings.map((holding) => (
                   <HoldingItem key={holding.StockTicker} holding={holding} />

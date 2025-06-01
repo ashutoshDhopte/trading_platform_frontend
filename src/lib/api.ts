@@ -10,6 +10,7 @@ export const getDashboardData = async (userId: number): Promise<Dashboard | null
                       }
                     });
   const data = res.data as ApiResponse;
+  // console.log(data);
   if(data.Success && data.Data){
     return data.Data as Dashboard;
   }
@@ -25,7 +26,6 @@ export const getUser = async (email: string, password: string): Promise<User | n
                       }
                     });
   const data = res.data as ApiResponse;
-  console.log(res);
   if(data.Success && data.Data){
     return data.Data as User;
   }
