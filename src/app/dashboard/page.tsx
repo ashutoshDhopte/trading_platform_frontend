@@ -4,6 +4,7 @@ import { buyStocks, getDashboardData, sellStocks } from '@/lib/api';
 import { Holding, Stock } from '@/type/model';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { formatCurrency } from '@/lib/util';
 
 const TradingDashboard = () => {
 
@@ -85,12 +86,6 @@ const TradingDashboard = () => {
   //   return () => clearInterval(interval);
   // }, []);
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
 
   const StockItem = ({ stock, onClick }) => (
     <div 

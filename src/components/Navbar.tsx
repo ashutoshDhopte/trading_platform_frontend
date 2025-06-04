@@ -1,6 +1,7 @@
 'use client';
 
 import { getUser } from '@/lib/api';
+import { formatCurrency } from '@/lib/util';
 import { User } from '@/type/model';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
@@ -69,8 +70,12 @@ const Navbar = () => {
                 
                 <div className="flex items-center gap-5">
                     <div className="bg-white/5 p-3 rounded-xl border border-white/10 backdrop-blur-lg">
+                        <div className="text-xs text-white/70 mb-1">Initial Investment</div>
+                        <div className="text-2xl font-bold">{formatCurrency(100000)}</div>
+                    </div>
+                    <div className="bg-white/5 p-3 rounded-xl border border-white/10 backdrop-blur-lg">
                         <div className="text-xs text-white/70 mb-1">Account Balance</div>
-                        <div className="text-2xl font-bold text-green-400">${user != null ? user.CashBalanceDollars : 0}</div>
+                        <div className="text-2xl font-bold text-green-400">{user != null ? formatCurrency(user.CashBalanceDollars) : 0.00}</div>
                     </div>
                     <div className="w-10 h-10 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full"></div>
                 </div>
