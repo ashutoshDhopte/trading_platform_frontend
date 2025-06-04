@@ -43,7 +43,7 @@ export class Dashboard{
         public TotalHoldingValueDollars: number,
         public PortfolioValueDollars: number,
         public TotalPnLDollars: number,
-        public TotalPnLPercent: number
+        public TotalReturnPercent: number
     ) {}
 }
 

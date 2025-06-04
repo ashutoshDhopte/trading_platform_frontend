@@ -1,6 +1,6 @@
 'use client';
 
-import { buyStocks, getDashboardData } from '@/lib/api';
+import { buyStocks, getDashboardData, sellStocks } from '@/lib/api';
 import { Holding, Stock } from '@/type/model';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -26,23 +26,42 @@ const TradingDashboard = () => {
     const [tradeQuantity, setTradeQuantity] = useState('');
 
     const quickTradeBuy = async () => {
-    if (!userId || !tradeSymbol || !tradeQuantity) return;
-    const quantity = parseInt(tradeQuantity);
-    if (isNaN(quantity) || quantity <= 0) {
-        console.error('Invalid quantity');
-        return;
-    }
-    const response = await buyStocks(userId, tradeSymbol, quantity);
-    if (response == "") {
-        console.log(`Bought ${quantity} shares of ${tradeSymbol}`);
-        // Optionally, refresh holdings or stocks after a successful trade
-        setTradeSymbol('');
-        setTradeQuantity('');
-        reloadPage()
-    } else {
-        console.error('Failed to buy stocks: '+response);
-    }
-};
+      if (!userId || !tradeSymbol || !tradeQuantity) return;
+      const quantity = parseInt(tradeQuantity);
+      if (isNaN(quantity) || quantity <= 0) {
+          console.error('Invalid quantity');
+          return;
+      }
+      const response = await buyStocks(userId, tradeSymbol, quantity);
+      if (response == "") {
+          console.log(`Bought ${quantity} shares of ${tradeSymbol}`);
+          // Optionally, refresh holdings or stocks after a successful trade
+          setTradeSymbol('');
+          setTradeQuantity('');
+          reloadPage()
+      } else {
+          console.error('Failed to buy stocks: '+response);
+      }
+    };
+
+    const quickTradeSell = async () => {
+      if (!userId || !tradeSymbol || !tradeQuantity) return;
+      const quantity = parseInt(tradeQuantity);
+      if (isNaN(quantity) || quantity <= 0) {
+          console.error('Invalid quantity');
+          return;
+      }
+      const response = await sellStocks(userId, tradeSymbol, quantity);
+      if (response == "") {
+          console.log(`Sold ${quantity} shares of ${tradeSymbol}`);
+          // Optionally, refresh holdings or stocks after a successful trade
+          setTradeSymbol('');
+          setTradeQuantity('');
+          reloadPage()
+      } else {
+          console.error('Failed to buy stocks: '+response);
+      }
+    };
 
   // Simulate real-time price updates
   // useEffect(() => {
@@ -96,8 +115,15 @@ const TradingDashboard = () => {
   const HoldingItem = ({ holding }) => (
     <div className="flex justify-between items-center py-4 border-b border-white/5 last:border-b-0">
       <div className="flex flex-col gap-1">
-        <div className="font-bold">{holding.StockTicker}</div>
-        <div className="text-white/70 text-sm">{holding.Quantity} shares</div>
+        <div className="font-bold">{holding.StockTicker}
+          {holding.Quantity > 0 && (
+          <span className="ml-2 text-green-400">▲</span>
+          )}
+          {holding.Quantity < 0 && (
+            <span className="ml-2 text-red-400">▼</span>
+          )}
+        </div>
+        <div className="text-white/70 text-sm">{Math.abs(holding.Quantity)} qty x {formatCurrency(holding.AverageCostPerShareDollars)} avg</div>
       </div>
       <div className="text-right">
         <div className="font-bold">{formatCurrency(holding.TotalValueDollars)}</div>
@@ -136,7 +162,7 @@ const TradingDashboard = () => {
       setHoldings(data.Holdings == null ? [] : data.Holdings);
       setPortfolioValue(data.PortfolioValueDollars || 0);
       setTotalPnL(data.TotalPnLDollars || 0);
-      setTotalPnLPercent(data.TotalPnLPercent || 0);
+      setTotalPnLPercent(data.TotalReturnPercent || 0);
       setTotalHoldingValue(data.TotalHoldingValueDollars || 0);
     };
 
@@ -155,26 +181,29 @@ const TradingDashboard = () => {
           <span>Market Open • NYSE • Last updated: 2 seconds ago</span>
         </div>
 
-        {/* Portfolio Stats */}
-        <div className="grid grid-cols-3 gap-5 mb-8">
-          <div className="bg-white/5 p-5 rounded-xl border border-white/10 text-center">
-            <div className={`text-3xl font-bold ${portfolioValue >= 0 ? 'text-green-400' : 'text-red-400'} mb-2`}>{formatCurrency(portfolioValue)}</div>
-            <div className="text-white/70">Portfolio Value</div>
-          </div>
-          <div className="bg-white/5 p-5 rounded-xl border border-white/10 text-center">
-            <div className={`text-3xl font-bold ${totalPnL >= 0 ? 'text-green-400' : 'text-red-400'} mb-2`}>{totalPnL >= 0 ? '+' : ''}{formatCurrency(totalPnL)}</div>
-            <div className="text-white/70">Today's P&L</div>
-          </div>
-          <div className="bg-white/5 p-5 rounded-xl border border-white/10 text-center">
-            <div className={`text-3xl font-bold ${totalPnLPercent >= 0 ? 'text-green-400' : 'text-red-400'} mb-2`}>{totalPnLPercent >= 0 ? '+' : ''}{totalPnLPercent.toFixed(2)}%</div>
-            <div className="text-white/70">Total Return</div>
-          </div>
-        </div>
+        
 
         {/* Main Content */}
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Left Panel - 2/3 width */}
           <div className="lg:col-span-2 space-y-8">
+
+            {/* Portfolio Stats */}
+            <div className="grid grid-cols-3 gap-5 mb-8">
+              <div className="bg-white/5 p-5 rounded-xl border border-white/10 text-center">
+                <div className={`text-3xl font-bold ${portfolioValue >= 0 ? 'text-green-400' : 'text-red-400'} mb-2`}>{formatCurrency(portfolioValue)}</div>
+                <div className="text-white/70">Portfolio Value</div>
+              </div>
+              <div className="bg-white/5 p-5 rounded-xl border border-white/10 text-center">
+                <div className={`text-3xl font-bold ${totalPnL >= 0 ? 'text-green-400' : 'text-red-400'} mb-2`}>{totalPnL >= 0 ? '+' : ''}{formatCurrency(totalPnL)}</div>
+                <div className="text-white/70">Today's P&L</div>
+              </div>
+              <div className="bg-white/5 p-5 rounded-xl border border-white/10 text-center">
+                <div className={`text-3xl font-bold ${totalPnLPercent >= 0 ? 'text-green-400' : 'text-red-400'} mb-2`}>{totalPnLPercent >= 0 ? '+' : ''}{totalPnLPercent.toFixed(2)}%</div>
+                <div className="text-white/70">Total Return</div>
+              </div>
+            </div>
+
             {/* Market Overview */}
             <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-xl hover:transform hover:-translate-y-1 transition-all duration-300 hover:border-white/20 hover:shadow-2xl">
               <div className="flex justify-between items-center mb-5">
@@ -207,6 +236,37 @@ const TradingDashboard = () => {
 
           {/* Right Panel - 1/3 width */}
           <div className="space-y-5">
+
+            {/* Quick Trade */}
+            <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-xl hover:transform hover:-translate-y-1 transition-all duration-300 hover:border-white/20 hover:shadow-2xl">
+              <h3 className="text-xl font-semibold mb-5">Quick Trade</h3>
+              <div className="space-y-4">
+                <input
+                  type="text"
+                  placeholder="Enter symbol (e.g., AAPL)"
+                  value={tradeSymbol}
+                  onChange={(e) => setTradeSymbol(e.target.value)}
+                  className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-cyan-400 focus:outline-none transition-colors"
+                />
+                <input
+                  type="number"
+                  placeholder="Quantity"
+                  value={tradeQuantity}
+                  onChange={(e) => setTradeQuantity(e.target.value)}
+                  className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-cyan-400 focus:outline-none transition-colors"
+                />
+                <div className="flex gap-3">
+                  <button className="flex-1 py-3 px-6 bg-gradient-to-r from-green-400 to-cyan-400 text-black rounded-lg font-semibold hover:transform hover:-translate-y-1 transition-all duration-300 hover:shadow-lg" onClick={quickTradeBuy}>
+                    Buy
+                  </button>
+                  <button className="flex-1 py-3 px-6 bg-red-500/20 text-red-400 border border-red-500 rounded-lg font-semibold hover:bg-red-500 hover:text-white transition-all duration-300"
+                    onClick={quickTradeSell}>
+                    Sell
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* Holdings */}
             <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-xl hover:transform hover:-translate-y-1 transition-all duration-300 hover:border-white/20 hover:shadow-2xl">
               <div className="mb-5 flex">
@@ -240,34 +300,7 @@ const TradingDashboard = () => {
               </div>
             </div>
 
-            {/* Quick Trade */}
-            <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-xl hover:transform hover:-translate-y-1 transition-all duration-300 hover:border-white/20 hover:shadow-2xl">
-              <h3 className="text-xl font-semibold mb-5">Quick Trade</h3>
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="Enter symbol (e.g., AAPL)"
-                  value={tradeSymbol}
-                  onChange={(e) => setTradeSymbol(e.target.value)}
-                  className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-cyan-400 focus:outline-none transition-colors"
-                />
-                <input
-                  type="number"
-                  placeholder="Quantity"
-                  value={tradeQuantity}
-                  onChange={(e) => setTradeQuantity(e.target.value)}
-                  className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-cyan-400 focus:outline-none transition-colors"
-                />
-                <div className="flex gap-3">
-                  <button className="flex-1 py-3 px-6 bg-gradient-to-r from-green-400 to-cyan-400 text-black rounded-lg font-semibold hover:transform hover:-translate-y-1 transition-all duration-300 hover:shadow-lg" onClick={quickTradeBuy}>
-                    Buy
-                  </button>
-                  <button className="flex-1 py-3 px-6 bg-red-500/20 text-red-400 border border-red-500 rounded-lg font-semibold hover:bg-red-500 hover:text-white transition-all duration-300">
-                    Sell
-                  </button>
-                </div>
-              </div>
-            </div>
+            
           </div>
         </div>
       </div>

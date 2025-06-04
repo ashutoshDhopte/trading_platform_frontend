@@ -47,3 +47,18 @@ export const buyStocks = async (userId: number, ticker: string, quantity: number
 
   return ""
 }
+
+export const sellStocks = async (userId: number, ticker: string, quantity: number): Promise<string> => {
+  const res = await axios.post(`${API_BASE}/sell-stocks`, {
+    userId: userId,
+    ticker: ticker,
+    quantity: quantity
+  });
+
+  const data = res.data as ApiResponse;
+  if(!data.Success){
+    return data.ErrorMessage ?? "";
+  }
+
+  return ""
+}
