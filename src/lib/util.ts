@@ -5,3 +5,7 @@ export const formatCurrency = (amount: number) => {
         currency: 'USD'
     }).format(amount);
 };
+
+export function isNumeric(value: string): boolean {
+  return !isNaN(Number(value)) && value.trim() !== '';
+}

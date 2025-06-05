@@ -1,40 +1,30 @@
 'use client';
 
-import { getUser } from '@/lib/api';
 import { formatCurrency } from '@/lib/util';
-import { User } from '@/type/model';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useUser } from './UserContext';
+import { useRouter } from 'next/navigation';
 
 // Create a map for tab names and their corresponding paths outside the component
 const tabPaths = [
     { name: 'Dashboard', path: '/dashboard' },
-    // { name: 'Portfolio', path: '/portfolio' },
-    // { name: 'Markets', path: '/markets' },
-    // { name: 'Orders', path: '/orders' },
-    // { name: 'Profile', path: '/profile' }
+    // { name: 'Portfolio', path: '/' },
+    // { name: 'Markets', path: '/' },
+    // { name: 'Orders', path: '/' },
 ];
 
 const Navbar = () => {
 
+    const router = useRouter();
     const [activeTab, setActiveTab] = useState<string>();
-    const [user, setUser] = useState<User>();
+    const [showProfilePopup, setShowProfilePopup] = useState<boolean>(false);
+    const { user } = useUser();
 
     useEffect(() => {
         setActiveTab(tabPaths[0].name); // Set default tab only once
-
-        const getData = async () => {
-            const data = await getUser('user@example.com', '12345');
-            if(data == null){
-                console.error('Failed to fetch user data');
-                return;
-            }
-            setUser(data == null ? new User(0, '', '', 0, '', '') : data);
-        };
-
-        getData();
-
     }, []);
+
 
     return(
 
@@ -77,7 +67,43 @@ const Navbar = () => {
                         <div className="text-xs text-white/70 mb-1">Account Balance</div>
                         <div className="text-2xl font-bold text-green-400">{user != null ? formatCurrency(user.CashBalanceDollars) : 0.00}</div>
                     </div>
-                    <div className="w-10 h-10 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full"></div>
+                    <div className="relative">
+                        <button
+                            className="w-10 h-10 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full flex items-center justify-center focus:outline-none cursor-pointer"
+                            onClick={() => setShowProfilePopup((prev) => !prev)}
+                            aria-label="Open profile menu"
+                        >
+                            {/* Optionally, add a user icon here */}
+                        </button>
+                        {showProfilePopup && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
+                                <Link
+                                    href="/profile"
+                                    className="flex items-center px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
+                                    onClick={() => setShowProfilePopup(false)}
+                                >
+                                    <svg className="w-5 h-5 mr-2 text-cyan-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A9 9 0 1112 21a9 9 0 01-6.879-3.196z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    Profile
+                                </Link>
+                                <button
+                                    className="flex items-center w-full px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
+                                    onClick={() => {
+                                        setShowProfilePopup(false);
+                                        // Add logout logic here
+                                        router.push('/');
+                                    }}
+                                >
+                                    <svg className="w-5 h-5 mr-2 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" />
+                                    </svg>
+                                    Logout
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </header>
         </nav>

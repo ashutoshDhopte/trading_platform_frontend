@@ -62,3 +62,27 @@ export const sellStocks = async (userId: number, ticker: string, quantity: numbe
 
   return ""
 }
+
+export const login = async (email: string, password: string): Promise<ApiResponse> => {
+  const res = await axios.get(`${API_BASE}/login`, {
+    params: {
+      email: email,
+      password: password
+    }
+  });
+
+  return res.data as ApiResponse;
+}
+
+export const createAccount = async (email: string, password: string, verifyPassword: string): Promise<ApiResponse> => {
+  console.log("Creating account with email:", email, "password:", password, "verifyPassword:", verifyPassword);
+  const res = await axios.get(`${API_BASE}/create-account`, {
+    params: {
+      email: email,
+      password: password,
+      verifyPassword: verifyPassword
+    }
+  });
+
+  return res.data as ApiResponse;
+}

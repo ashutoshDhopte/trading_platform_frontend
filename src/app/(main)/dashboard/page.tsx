@@ -5,6 +5,7 @@ import { Holding, Stock } from '@/type/model';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { formatCurrency } from '@/lib/util';
+import { useUser } from '@/components/UserContext';
 
 const TradingDashboard = () => {
 
@@ -14,6 +15,7 @@ const TradingDashboard = () => {
   
     const userId = Number(useSearchParams().get('userId'));
 
+    const {user, setUser} = useUser();
     const [stocks, setStocks] = useState<Stock[]>([]);
     const [holdings, setHoldings] = useState<Holding[]>([]);
     const [portfolioValue, setPortfolioValue] = useState(0.00);
@@ -148,7 +150,8 @@ const TradingDashboard = () => {
 
   useEffect(() => {
     const getData = async () => {
-      const data = await getDashboardData(1);
+      
+      const data = await getDashboardData(userId);
       if(data == null){
         console.error('Failed to fetch dashboard data');
         return;
@@ -159,6 +162,7 @@ const TradingDashboard = () => {
       setTotalPnL(data.TotalPnLDollars || 0);
       setTotalPnLPercent(data.TotalReturnPercent || 0);
       setTotalHoldingValue(data.TotalHoldingValueDollars || 0);
+      setUser(data.User == null ? null : data.User);
     };
 
     getData();
