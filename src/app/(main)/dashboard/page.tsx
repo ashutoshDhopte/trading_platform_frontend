@@ -10,10 +10,6 @@ import { useUser } from '@/components/UserContext';
 import { useCallback } from 'react';
 
 const TradingDashboard = () => {
-
-    const reloadPage = () => {
-      window.location.reload();
-    };
   
     const userId = Number(useSearchParams().get('userId'));
 
