@@ -2,15 +2,14 @@
 
 import { createAccount, login } from "@/lib/api";
 import { useRouter } from "next/navigation";
-import React, {useState } from "react";
-
+import React, { useState } from "react";
 
 export default function Home() {
-
   const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showVerifyPassword, setShowVerifyPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -28,47 +27,37 @@ export default function Home() {
     setShowVerifyPassword(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // handle login or create account logic here
+    setLoading(true);
     let userId = 0;
 
-    if(isLogin){
-
-      login(form.email, form.password).then((data) => {
-
-        if(data.Success){
+    try {
+      if (isLogin) {
+        const data = await login(form.email, form.password);
+        if (data.Success) {
           userId = data.Data as number;
-          // After login success:
           router.push(`/dashboard?userId=${userId}`);
-        }else{
+        } else {
           console.error("Login failed: " + data.ErrorMessage);
         }
-
-      }).catch((error) => {
-        console.error("Login failed with error: ", error);
-      });
-
-    }else{
-
-      createAccount(form.email, form.password, form.verifyPassword).then((data) => {
-
-        if(data.Success){
+      } else {
+        const data = await createAccount(form.email, form.password, form.verifyPassword);
+        if (data.Success) {
           userId = data.Data as number;
-          // After login success:
           router.push(`/dashboard?userId=${userId}`);
-        }else{
+        } else {
           console.error("Signup failed: " + data.ErrorMessage);
         }
-
-      }).catch((error) => {
-        console.error("Signup failed with error: ", error);
-      });
+      }
+    } catch (error) {
+      console.error(isLogin ? "Login failed with error: " : "Signup failed with error: ", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    //redirect to /dashboard if user is logged in
     <div className="bg-gray-900 text-white min-h-screen flex flex-col justify-center items-center h-screen">
       <p className="text-2xl mt-4">Welcome to your trading simulation platform</p>
       <form
@@ -138,19 +127,43 @@ export default function Home() {
         )}
         <button
           type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition-colors"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition-colors flex items-center justify-center"
+          disabled={loading}
         >
           {isLogin ? "Login" : "Create Account"}
+          {loading && (
+            <svg
+              className="animate-spin ml-2 h-5 w-5 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+              ></path>
+            </svg>
+          )}
         </button>
       </form>
       <button
         onClick={toggleForm}
         className="mt-4 text-blue-400 hover:underline"
+        disabled={loading}
       >
         {isLogin
           ? "Don't have an account? Create Account"
           : "Already have an account? Login"}
       </button>
     </div>
-  )
+  );
 }

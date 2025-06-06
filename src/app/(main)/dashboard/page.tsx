@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { formatCurrency } from '@/lib/util';
 import { useUser } from '@/components/UserContext';
+import { useCallback } from 'react';
 
 const TradingDashboard = () => {
 
@@ -42,7 +43,7 @@ const TradingDashboard = () => {
           // Optionally, refresh holdings or stocks after a successful trade
           setTradeSymbol('');
           setTradeQuantity('');
-          reloadPage()
+          loadDashboard()
       } else {
           console.error('Failed to buy stocks: '+response);
       }
@@ -61,7 +62,7 @@ const TradingDashboard = () => {
           // Optionally, refresh holdings or stocks after a successful trade
           setTradeSymbol('');
           setTradeQuantity('');
-          reloadPage()
+          loadDashboard()
       } else {
           console.error('Failed to buy stocks: '+response);
       }
@@ -147,27 +148,24 @@ const TradingDashboard = () => {
   //   </div>
   // );
 
-
+  const loadDashboard = useCallback(async () => {
+    const data = await getDashboardData(userId);
+    if(data == null){
+      console.error('Failed to fetch dashboard data');
+      return;
+    }
+    setStocks(data.Stocks == null ? [] : data.Stocks);
+    setHoldings(data.Holdings == null ? [] : data.Holdings);
+    setPortfolioValue(data.PortfolioValueDollars || 0);
+    setTotalPnL(data.TotalPnLDollars || 0);
+    setTotalPnLPercent(data.TotalReturnPercent || 0);
+    setTotalHoldingValue(data.TotalHoldingValueDollars || 0);
+    setUser(data.User == null ? null : data.User);
+  }, [userId, setUser]);
 
   useEffect(() => {
-    const getData = async () => {
-      
-      const data = await getDashboardData(userId);
-      if(data == null){
-        console.error('Failed to fetch dashboard data');
-        return;
-      }
-      setStocks(data.Stocks == null ? [] : data.Stocks);
-      setHoldings(data.Holdings == null ? [] : data.Holdings);
-      setPortfolioValue(data.PortfolioValueDollars || 0);
-      setTotalPnL(data.TotalPnLDollars || 0);
-      setTotalPnLPercent(data.TotalReturnPercent || 0);
-      setTotalHoldingValue(data.TotalHoldingValueDollars || 0);
-      setUser(data.User == null ? null : data.User);
-    };
-
-    getData();
-  }, [setUser, userId]);
+    loadDashboard();
+  }, [loadDashboard, setUser, userId]);
 
 
   return (
