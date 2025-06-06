@@ -1,7 +1,8 @@
 import { ApiResponse, Dashboard, User } from '@/type/model';
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:8080/trade-sim';
+// const API_BASE = 'http://localhost:8080/trade-sim';
+const API_BASE = 'https://trading-platform-backend-6w4v.onrender.com/trade-sim';
 
 export const getDashboardData = async (userId: number): Promise<Dashboard | null> => {
   const res = await axios.get(`${API_BASE}/dashboard`, {

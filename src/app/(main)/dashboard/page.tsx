@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { buyStocks, getDashboardData, sellStocks } from '@/lib/api';
 import { Holding, Stock } from '@/type/model';
@@ -89,7 +90,7 @@ const TradingDashboard = () => {
   // }, []);
 
 
-  const StockItem = ({ stock, onClick }) => (
+  const StockItem = ({ stock, onClick }: { stock: Stock; onClick: () => void }) => (
     <div 
       className="flex justify-between items-center p-4 bg-white/[0.03] rounded-xl border border-white/5 transition-all duration-300 cursor-pointer hover:bg-white/8 hover:border-white/15"
       onClick={onClick}
@@ -103,13 +104,13 @@ const TradingDashboard = () => {
       <div className="text-right">
         <div className="font-bold text-base">{formatCurrency(stock.OpeningPriceDollars)}</div>
         <div className={`text-sm mt-1 ${stock.ChangedPriceDollars >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-          {stock.ChangedPriceDollars >= 0 ? '+' : ''}{formatCurrency(stock.ChangedPercent)} ({stock.ChangePercent >= 0 ? '+' : ''}{stock.ChangedPercent}%)
+          {stock.ChangedPriceDollars >= 0 ? '+' : ''}{formatCurrency(stock.ChangedPercent)} ({stock.ChangedPercent >= 0 ? '+' : ''}{stock.ChangedPercent}%)
         </div>
       </div>
     </div>
   );
 
-  const HoldingItem = ({ holding }) => (
+  const HoldingItem = ({ holding } : { holding: Holding}) => (
     <div className="flex justify-between items-center py-4 border-b border-white/5 last:border-b-0">
       <div className="flex flex-col gap-1">
         <div className="font-bold">{holding.StockTicker}
@@ -131,20 +132,20 @@ const TradingDashboard = () => {
     </div>
   );
 
-  const WatchlistItem = ({ item }) => (
-    <div className="flex justify-between items-center py-3 border-b border-white/5 last:border-b-0">
-      <div>
-        <div className="font-bold">{item.symbol}</div>
-        <div className="text-white/70 text-sm">{item.name}</div>
-      </div>
-      <div className="text-right">
-        <div className="font-bold">{formatCurrency(item.price)}</div>
-        <div className={`text-sm ${item.changePercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-          {item.changePercent >= 0 ? '+' : ''}{item.changePercent}%
-        </div>
-      </div>
-    </div>
-  );
+  // const WatchlistItem = ({ item }) => (
+  //   <div className="flex justify-between items-center py-3 border-b border-white/5 last:border-b-0">
+  //     <div>
+  //       <div className="font-bold">{item.symbol}</div>
+  //       <div className="text-white/70 text-sm">{item.name}</div>
+  //     </div>
+  //     <div className="text-right">
+  //       <div className="font-bold">{formatCurrency(item.price)}</div>
+  //       <div className={`text-sm ${item.changePercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+  //         {item.changePercent >= 0 ? '+' : ''}{item.changePercent}%
+  //       </div>
+  //     </div>
+  //   </div>
+  // );
 
 
 
@@ -166,7 +167,7 @@ const TradingDashboard = () => {
     };
 
     getData();
-  }, []);
+  }, [setUser, userId]);
 
 
   return (
@@ -195,7 +196,7 @@ const TradingDashboard = () => {
               </div>
               <div className="bg-white/5 p-5 rounded-xl border border-white/10 text-center">
                 <div className={`text-3xl font-bold ${totalPnL >= 0 ? 'text-green-400' : 'text-red-400'} mb-2`}>{totalPnL >= 0 ? '+' : ''}{formatCurrency(totalPnL)}</div>
-                <div className="text-white/70">Today's P&L</div>
+                <div className="text-white/70">Today&apos;s P&L</div>
               </div>
               <div className="bg-white/5 p-5 rounded-xl border border-white/10 text-center">
                 <div className={`text-3xl font-bold ${totalPnLPercent >= 0 ? 'text-green-400' : 'text-red-400'} mb-2`}>{totalPnLPercent >= 0 ? '+' : ''}{totalPnLPercent.toFixed(2)}%</div>
