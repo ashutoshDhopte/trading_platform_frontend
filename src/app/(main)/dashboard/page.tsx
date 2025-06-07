@@ -291,7 +291,7 @@ const TradingDashboard = () => {
                       minute: '2-digit',
                       second: '2-digit'
                     })}
-                    &nbsp;&nbsp; (Updates every 1 minute)
+                    &nbsp;&nbsp; (Updates every 15 seconds)
                     </span>
                  </div>
               </div>
