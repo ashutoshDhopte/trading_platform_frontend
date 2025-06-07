@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Trading Simulator - Frontend
+
+This is the frontend for the Full-Stack Trading Platform Simulator, built with Next.js, React, and TypeScript. It provides a responsive and interactive user dashboard for simulating stock trades, viewing portfolio performance, and receiving real-time market data updates via WebSockets.
+
+## Key Features
+
+- **Interactive Dashboard:** Displays a user's total portfolio value, cash balance, and a detailed list of their stock holdings with current valuations.
+- **Real-time Data:** Connects to a Go backend via WebSockets to receive and display live-updating mock stock prices without needing to refresh the page.
+- **Trade Execution UI:** Simple and intuitive forms for submitting "buy" and "sell" orders to the backend API.
+- **Data Visualization:** Presents transaction history and portfolio data in clean, readable tables and lists.
+- **Modern Frontend Stack:** Built with the latest standards, including the Next.js App Router, TypeScript for type safety, and React hooks for state management.
+
+## Tech Stack
+
+- **Framework:** Next.js
+- **Library:** React
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **API Communication:** REST (for actions) & WebSockets (for real-time data)
+
+---
 
 ## Getting Started
 
-First, run the development server:
+Follow these instructions to get the frontend development server running on your local machine.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Prerequisites
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- [Node.js](https://nodejs.org/) (version 18+ recommended)
+- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/) or [pnpm](https://pnpm.io/)
+- The [Go Backend Server](#) must be running locally for the frontend to fetch data and connect to WebSockets.
+- [Go Backend Git repository](https://github.com/ashutoshDhopte/trading_platform_backend/)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Installation & Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1.  **Clone the Repository**
+    ```bash
+    # If the frontend is in its own repository
+    git clone [https://github.com/your-username/trading-platform-frontend.git](https://github.com/your-username/trading-platform-frontend.git)
+    cd trading-platform-frontend
+    ```
 
-## Learn More
+2.  **Install Dependencies**
+    ```bash
+    npm install
+    # or
+    # yarn install
+    # or
+    # pnpm install
+    ```
 
-To learn more about Next.js, take a look at the following resources:
+3.  **Run the Development Server**
+    ```bash
+    npm run dev
+    ```
+    The application should now be running on [http://localhost:3000](http://localhost:3000).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## How It Works
 
-## Deploy on Vercel
+- The application fetches initial portfolio and market data from the Go backend's REST API endpoints upon loading.
+- It immediately establishes a WebSocket connection to the Go backend to start receiving a live stream of stock price updates.
+- When a user submits a buy or sell order, a POST request is sent to the backend REST API. The UI then updates based on the response or by re-fetching the portfolio data to reflect the changes.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
