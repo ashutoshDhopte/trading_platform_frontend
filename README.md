@@ -1,4 +1,4 @@
-# Trading Simulator - Frontend
+# Stock Trading Simulator - Frontend
 
 This is the frontend for the Full-Stack Trading Platform Simulator, built with Next.js, React, and TypeScript. It provides a responsive and interactive user dashboard for simulating stock trades, viewing portfolio performance, and receiving real-time market data updates via WebSockets.
 
