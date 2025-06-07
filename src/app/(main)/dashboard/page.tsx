@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { buyStocks, getDashboardData, sellStocks } from '@/lib/api';
-import { Holding, Stock } from '@/type/model';
+import { Dashboard, Holding, Stock } from '@/type/model';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { formatCurrency } from '@/lib/util';
@@ -99,9 +99,9 @@ const TradingDashboard = () => {
         </div>
       </div>
       <div className="text-right">
-        <div className="font-bold text-base">{formatCurrency(stock.OpeningPriceDollars)}</div>
+        <div className="font-bold text-base">{formatCurrency(stock.CurrentPriceDollars)}</div>
         <div className={`text-sm mt-1 ${stock.ChangedPriceDollars >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-          {stock.ChangedPriceDollars >= 0 ? '+' : ''}{formatCurrency(stock.ChangedPercent)} ({stock.ChangedPercent >= 0 ? '+' : ''}{stock.ChangedPercent}%)
+          {stock.ChangedPriceDollars >= 0 ? '+' : ''}{formatCurrency(stock.ChangedPriceDollars)} ({stock.ChangedPercent >= 0 ? '+' : ''}{stock.ChangedPercent.toFixed(2)}%)
         </div>
       </div>
     </div>
@@ -144,12 +144,7 @@ const TradingDashboard = () => {
   //   </div>
   // );
 
-  const loadDashboard = useCallback(async () => {
-    const data = await getDashboardData(userId);
-    if(data == null){
-      console.error('Failed to fetch dashboard data');
-      return;
-    }
+  const setDashboardData = useCallback((data: Dashboard) => {
     setStocks(data.Stocks == null ? [] : data.Stocks);
     setHoldings(data.Holdings == null ? [] : data.Holdings);
     setPortfolioValue(data.PortfolioValueDollars || 0);
@@ -157,11 +152,78 @@ const TradingDashboard = () => {
     setTotalPnLPercent(data.TotalReturnPercent || 0);
     setTotalHoldingValue(data.TotalHoldingValueDollars || 0);
     setUser(data.User == null ? null : data.User);
-  }, [userId, setUser]);
+    setLastUpdateTime(new Date())
+  }, [setUser])
+
+  const loadDashboard = useCallback(async () => {
+    const data = await getDashboardData(userId);
+    if(data == null){
+      console.error('Failed to fetch dashboard data');
+      return;
+    }
+    setDashboardData(data);
+  }, [setDashboardData, userId]);
 
   useEffect(() => {
     loadDashboard();
   }, [loadDashboard, setUser, userId]);
+
+
+  const [dashboardWsStatus, setDashboardWsStatus] = useState(true);
+  const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
+
+  useEffect(() => {
+    // This effect runs once when the component mounts.
+    // It's responsible for establishing and managing the WebSocket connection.
+
+    // The URL of your Go backend's WebSocket endpoint.
+    // In development, this is localhost. For cloud deployment, you'd use a different URL
+    // from an environment variable, e.g., `process.env.NEXT_PUBLIC_WEBSOCKET_URL`.
+    const wsUrl = `ws://localhost:8080/trade-sim/ws/dashboard?userId=${userId}`;
+    // const wsUrl = `ws://trading-platform-backend-6w4v.onrender.com/trade-sim/ws/dashboard?userId=${userId}`;
+
+    // Create a new WebSocket connection.
+    const ws = new WebSocket(wsUrl);
+
+    // Event handler for when the connection is successfully opened.
+    ws.onopen = () => {
+      console.log('WebSocket connection established.');
+      setDashboardWsStatus(true);
+    };
+
+    // Event handler for receiving messages from the server.
+    ws.onmessage = (event) => {
+      try {
+        // The data from the server is a JSON string. We need to parse it.
+        const dashboard: Dashboard = JSON.parse(event.data);
+        
+        // Update the component's state with the new list of stocks.
+        // This will cause the UI to re-render with the new prices.
+        setDashboardData(dashboard);
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    };
+
+    // Event handler for any errors that occur.
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      setDashboardWsStatus(false);
+    };
+
+    // Event handler for when the connection is closed.
+    ws.onclose = () => {
+      console.log('WebSocket connection closed.');
+      setDashboardWsStatus(false);
+    };
+
+    // This is a cleanup function.
+    // It will be called when the component is unmounted (e.g., if you navigate to another page).
+    // This is crucial for preventing memory leaks by closing the connection.
+    return () => {
+      ws.close();
+    };
+  }, []); // The empty dependency array `[]` ensures this effect runs only once on mount.
 
 
   return (
@@ -170,10 +232,10 @@ const TradingDashboard = () => {
       <div className="max-w-7xl mx-auto p-5 mt-35">
 
         {/* Market Status */}
-        <div className="flex items-center gap-2 p-3 bg-green-400/10 border border-green-400/30 rounded-lg mb-8">
+        {/* <div className="flex items-center gap-2 p-3 bg-green-400/10 border border-green-400/30 rounded-lg mb-8">
           <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-          <span>Market Open • NYSE • Last updated: 2 seconds ago</span>
-        </div>
+          <span>Market Open • NYSE</span>
+        </div> */}
 
         
 
@@ -202,7 +264,36 @@ const TradingDashboard = () => {
             <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-xl hover:transform hover:-translate-y-1 transition-all duration-300 hover:border-white/20 hover:shadow-2xl">
               <div className="flex justify-between items-center mb-5">
                 <h3 className="text-xl font-semibold">Market Overview</h3>
-                <div className="w-5 h-5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+                <div className="justify-end flex items-center">
+                  {dashboardWsStatus ? (
+                    <div className="w-5 h-5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <svg
+                      className="w-5 h-5 ml-2 text-red-500"
+                      fill="none"
+                      viewBox="0 0 20 20"
+                      stroke="currentColor"
+                    >
+                      <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="2" fill="none" />
+                      <line x1="10" y1="6" x2="10" y2="11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      <circle cx="10" cy="14" r="1" fill="currentColor" />
+                    </svg>
+                  )}
+                    <span className='pl-2 text-sm text-white/70'>
+                    Last updated:&nbsp;&nbsp;
+                    {lastUpdateTime.toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}{' '}
+                    {lastUpdateTime.toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit'
+                    })}
+                    &nbsp;&nbsp; (Updates every 1 minute)
+                    </span>
+                 </div>
               </div>
               <div className="space-y-3">
                 {stocks.map((stock) => (

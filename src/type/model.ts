@@ -16,6 +16,7 @@ export class Stock{
         public Ticker: string,
         public Name: string,
         public OpeningPriceDollars: number,
+        public CurrentPriceDollars: number,
         public ChangedPriceDollars: number,
         public ChangedPercent: number,
         public UpdatedAt: string
