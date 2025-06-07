@@ -180,7 +180,7 @@ const TradingDashboard = () => {
     // In development, this is localhost. For cloud deployment, you'd use a different URL
     // from an environment variable, e.g., `process.env.NEXT_PUBLIC_WEBSOCKET_URL`.
     // const wsUrl = `ws://localhost:8080/trade-sim/ws/dashboard?userId=${userId}`;
-    const wsUrl = `ws://trading-platform-backend-6w4v.onrender.com/trade-sim/ws/dashboard?userId=${userId}`;
+    const wsUrl = `wss://trading-platform-backend-6w4v.onrender.com/trade-sim/ws/dashboard?userId=${userId}`;
 
     // Create a new WebSocket connection.
     const ws = new WebSocket(wsUrl);
