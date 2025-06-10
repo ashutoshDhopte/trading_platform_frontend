@@ -365,14 +365,14 @@ const TradingDashboard = () => {
                   <HoldingItem key={holding.StockTicker} holding={holding} />
                 ))}
               </div>
-              <div className="flex gap-3 mt-5">
+              {/* <div className="flex gap-3 mt-5">
                 <button className="flex-1 py-3 px-6 bg-gradient-to-r from-green-400 to-cyan-400 text-black rounded-lg font-semibold hover:transform hover:-translate-y-1 transition-all duration-300 hover:shadow-lg">
                   Buy More
                 </button>
                 <button className="flex-1 py-3 px-6 bg-red-500/20 text-red-400 border border-red-500 rounded-lg font-semibold hover:bg-red-500 hover:text-white transition-all duration-300">
                   Sell
                 </button>
-              </div>
+              </div> */}
             </div>
 
             {/* Watchlist */}

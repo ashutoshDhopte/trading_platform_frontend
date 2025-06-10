@@ -77,7 +77,7 @@ const Navbar = () => {
                         </button>
                         {showProfilePopup && (
                             <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
-                                <Link
+                                {/* <Link
                                     href="/profile"
                                     className="flex items-center px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
                                     onClick={() => setShowProfilePopup(false)}
@@ -87,7 +87,7 @@ const Navbar = () => {
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
                                     Profile
-                                </Link>
+                                </Link> */}
                                 <button
                                     className="flex items-center w-full px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
                                     onClick={() => {
