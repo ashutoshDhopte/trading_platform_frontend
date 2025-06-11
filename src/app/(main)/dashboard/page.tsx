@@ -157,8 +157,8 @@ const TradingDashboard = () => {
     // from an environment variable, e.g., `process.env.NEXT_PUBLIC_WEBSOCKET_URL`.
 
 
-    const wsUrl = `ws://localhost:8080/trade-sim/ws/dashboard?userId=${userIdForWS}`;
-    // const wsUrl = `wss://trading-platform-backend-6w4v.onrender.com/trade-sim/ws/dashboard?userId=${userIdForWS}`;
+    // const wsUrl = `ws://localhost:8080/trade-sim/ws/dashboard?userId=${userIdForWS}`;
+    const wsUrl = `wss://trading-platform-backend-6w4v.onrender.com/trade-sim/ws/dashboard?userId=${userIdForWS}`;
 
     // Create a new WebSocket connection.
     const ws = new WebSocket(wsUrl);
