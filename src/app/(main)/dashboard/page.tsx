@@ -1,13 +1,61 @@
 'use client';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { buyStocks, getDashboardData, sellStocks } from '@/lib/api';
+import { addStockToWatchlist, buyStocks, getDashboardData, sellStocks } from '@/lib/api';
 import { Dashboard, Holding, Stock } from '@/type/model';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { formatCurrency } from '@/lib/util';
 import { useUser } from '@/components/UserContext';
 import { useCallback } from 'react';
+import { useRef } from 'react';
+
+// Popup component for adding to watchlist
+const StockWatchlistPopup = ({ x, y, stockPrice, onAdd }: { x: number, y: number, stockPrice: number, onAdd: (value: string) => void }) => {
+  const [input, setInput] = useState('');
+  const popupRef = useRef<HTMLDivElement>(null);
+  
+  // Close on outside click
+  useEffect(() => {
+    setInput(stockPrice.toFixed(2).toString()); // Initialize with stock price as string
+    function handleClick(e: MouseEvent) {
+      
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [stockPrice]);
+
+  return (
+    <div
+      ref={popupRef}
+      style={{ position: 'absolute', left: x, top: y, zIndex: 1000 }}
+      className="text-black shadow-lg min-w-[180px] border border-gray-200 bg-white/[0.03] border border-white/10 rounded-2xl backdrop-blur-xl item-center flex p-3"
+    >
+      {/* Caret */}
+      <div
+      style={{ position: 'absolute', left: '50%', top: '-10px', transform: 'translateX(-50%)' }}
+      >
+      <svg width="20" height="10" viewBox="0 0 20 10">
+        <polygon points="10,0 20,10 0,10" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.03"/>
+      </svg>
+      </div>
+      <input
+        type="text"
+        value={input}
+        onChange={e => setInput(e.target.value)}
+        className="w-full p-2 pl-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-cyan-400 focus:outline-none transition-colors"
+        placeholder="Target price"
+      />
+      <button
+        className="text-white rounded font-semibold cursor-pointer transition-colors mx-auto ml-2"
+        style={{ width: '40%', display: 'block' }}
+        onClick={() => { onAdd(input); }}
+      >
+      Add
+      </button>
+    </div>
+  );
+};
 
 const TradingDashboard = () => {
   
@@ -63,22 +111,30 @@ const TradingDashboard = () => {
     };
 
 
-  const StockItem = ({ stock, onClick }: { stock: Stock; onClick: () => void }) => (
+  // Update StockItem to accept onEyeClick: (e: React.MouseEvent) => void
+  const StockItem = ({ stock, onClick, onEyeClick }: { stock: Stock; onClick: () => void; onEyeClick: (e: React.MouseEvent) => void }) => (
     <div 
-      className="flex justify-between items-center p-4 bg-white/[0.03] rounded-xl border border-white/5 transition-all duration-300 cursor-pointer hover:bg-white/8 hover:border-white/15"
+      className="flex justify-between items-center p-4 bg-white/[0.03] rounded-xl border border-white/5 transition-all duration-300 cursor-pointer"
       onClick={onClick}
     >
       <div className="flex items-center gap-3">
-        <div>
-          <div className="font-bold text-base">{stock.Ticker}</div>
-          <div className="text-white/70 text-sm">{stock.Name}</div>
-        </div>
+      <div>
+        <div className="font-bold text-base">{stock.Ticker}</div>
+        <div className="text-white/70 text-sm">{stock.Name}</div>
       </div>
-      <div className="text-right">
+      </div>
+      <div className="text-right flex items-center gap-2">
+      <div>
         <div className="font-bold text-base">{formatCurrency(stock.CurrentPriceDollars)}</div>
-        <div className={`text-sm mt-1 ${stock.ChangedPriceDollars >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-          {stock.ChangedPriceDollars >= 0 ? '+' : ''}{formatCurrency(stock.ChangedPriceDollars)} ({stock.ChangedPercent >= 0 ? '+' : ''}{stock.ChangedPercent.toFixed(2)}%)
-        </div>
+        <div className={`text-sm mt-1 ${stock.ChangedPriceDollars >= 0 ? 'text-green-400' : 'text-red-400'}`}>{stock.ChangedPriceDollars >= 0 ? '+' : ''}{formatCurrency(stock.ChangedPriceDollars)} ({stock.ChangedPercent >= 0 ? '+' : ''}{stock.ChangedPercent.toFixed(2)}%)</div>
+      </div>
+      {/* Eye Icon - always visible */}
+      <span className="ml-2 text-gray-400 cursor-pointer" onClick={onEyeClick}>
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M1.5 12s4-7.5 10.5-7.5S22.5 12 22.5 12s-4 7.5-10.5 7.5S1.5 12 1.5 12z" />
+        <circle cx="12" cy="12" r="3.5" />
+        </svg>
+      </span>
       </div>
     </div>
   );
@@ -201,11 +257,38 @@ const TradingDashboard = () => {
     };
   }, [setDashboardData, userIdForWS]); // The empty dependency array `[]` ensures this effect runs only once on mount.
 
+  const addStockToWatchlistApiCall = async (stockId: number, targetPriceStr: string) => {
+    console.log(`Adding stock ${stockId} to watchlist with target price ${targetPriceStr}`);
+    if (!user?.UserID || !stockId || !targetPriceStr) return;
+    const targetPrice = parseFloat(targetPriceStr);
+    if (isNaN(targetPrice) || targetPrice <= 0) {
+        console.error('Invalid target price');
+        return;
+    }
+    const response = await addStockToWatchlist(user?.UserID, stockId, targetPrice);
+    if (response == "") {
+        console.log(`Added stock ${stockId} to watchlist with target price ${targetPrice}`);
+        setPopup(null); // Close the popup after adding
+    } else {
+        console.error('Failed to add stock to wathchlist: '+response);
+    }
+  };
+
+  const [popup, setPopup] = useState<{ x: number, y: number, stockId: number, stockPrice: number } | null>(null);
+
+  const handleEyeClick = (event: React.MouseEvent, stock: Stock) => {
+    const rect = (event.target as HTMLElement).getBoundingClientRect();
+    setPopup({
+      x: rect.left + window.scrollX - 207 + rect.width / 2, // center popup
+      y: rect.top + window.scrollY - 110, // above the icon
+      stockId: stock.StockID,
+      stockPrice: stock.CurrentPriceDollars
+    });
+  };
 
   return (
     <section className="relative section-padding flex min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-indigo-900 text-white">
-      
-      <div className="max-w-7xl mx-auto p-5 mt-35">
+      <div className="max-w-7xl mx-auto p-5 mt-35 relative">
 
         {/* Market Status */}
         {/* <div className="flex items-center gap-2 p-3 bg-green-400/10 border border-green-400/30 rounded-lg mb-8">
@@ -277,6 +360,7 @@ const TradingDashboard = () => {
                     key={stock.Ticker} 
                     stock={stock} 
                     onClick={() => console.log(`Clicked ${stock.Ticker}`)}
+                    onEyeClick={(e) => handleEyeClick(e, stock)}
                   />
                 ))}
               </div>
@@ -364,6 +448,15 @@ const TradingDashboard = () => {
             
           </div>
         </div>
+        {/* Render the popup absolutely inside the container */}
+        {popup && (
+          <StockWatchlistPopup
+            x={popup.x}
+            y={popup.y}
+            stockPrice={popup.stockPrice}
+            onAdd={val => addStockToWatchlistApiCall(popup.stockId, val)}
+          />
+        )}
       </div>
     </section>
   );

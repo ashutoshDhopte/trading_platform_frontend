@@ -116,3 +116,22 @@ export const getOrders = async (userId: number): Promise<Order[]> => {
 
   return [];
 }
+
+export const addStockToWatchlist = async (userId: number, stockId: number, targetPrice: number): Promise<string> => {
+  const res = await axios.get(`${API_BASE}/add-stock-watchlist`, {
+    params: {
+      userId: userId,
+      stockId: stockId,
+      targetPrice: targetPrice
+    }
+  });
+
+  const data = res.data as ApiResponse;
+  // console.log(data);
+  if(!data.Success){
+    console.error(data.ErrorMessage);
+    return data.ErrorMessage ?? "Failed to add stock to the watchlist";
+  }
+
+  return "";
+}
