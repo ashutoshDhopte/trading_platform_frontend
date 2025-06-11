@@ -159,7 +159,7 @@ const TradingDashboard = () => {
     const wsUrl = process.env.NEXT_PUBLIC_API_WS;
 
     // Create a new WebSocket connection.
-    const ws = new WebSocket(wsUrl+`?userId=${userIdForWS}`);
+    const ws = new WebSocket(wsUrl+`/dashboard?userId=${userIdForWS}`);
 
     // Event handler for when the connection is successfully opened.
     ws.onopen = () => {
