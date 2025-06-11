@@ -4,14 +4,15 @@ import { formatCurrency } from '@/lib/util';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useUser } from './UserContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { getUser, getUserById } from '@/lib/api';
 
 // Create a map for tab names and their corresponding paths outside the component
 const tabPaths = [
     { name: 'Dashboard', path: '/dashboard' },
     // { name: 'Portfolio', path: '/' },
     // { name: 'Markets', path: '/' },
-    // { name: 'Orders', path: '/' },
+    { name: 'Orders', path: '/orders' },
 ];
 
 const Navbar = () => {
@@ -19,11 +20,36 @@ const Navbar = () => {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<string>();
     const [showProfilePopup, setShowProfilePopup] = useState<boolean>(false);
-    const { user } = useUser();
-
+    const { user, setUser } = useUser();
+    const userId = Number(useSearchParams().get('userId'));
+    
     useEffect(() => {
-        setActiveTab(tabPaths[0].name); // Set default tab only once
-    }, []);
+
+        const currentPath = window.location.pathname.split('/')[1];
+        const foundTab = tabPaths.find(tab => tab.path.includes(currentPath));
+        if (foundTab) 
+            setActiveTab(foundTab.name)
+        else 
+            setActiveTab(tabPaths[0].name); // Set default tab only once
+
+
+
+        const fetchUserById = async (id: number) => {
+            try {
+                const userData = await getUserById(id);
+                if (userData) {
+                    setUser(userData);
+                } else {
+                    console.error('User not found');
+                }
+            } catch (error) {
+                console.error('Error fetching user:', error);
+            }
+        };
+
+        fetchUserById(userId);
+        
+    }, [setUser, userId]);
 
 
     return(
@@ -65,7 +91,7 @@ const Navbar = () => {
                     </div>
                     <div className="bg-white/5 p-3 rounded-xl border border-white/10 backdrop-blur-lg">
                         <div className="text-xs text-white/70 mb-1">Account Balance</div>
-                        <div className="text-2xl font-bold text-green-400">{user != null ? formatCurrency(user.CashBalanceDollars) : 0.00}</div>
+                        <div className="text-2xl font-bold text-green-400">{formatCurrency(user?.CashBalanceDollars || 0)}</div>
                     </div>
                     <div className="relative">
                         <button

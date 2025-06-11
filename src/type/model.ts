@@ -53,3 +53,16 @@ export interface ApiResponse {
     Data?: unknown; // Can be User, Dashboard, or string for error messages
     ErrorMessage?: string; // Error message if the transaction fails            
 }
+
+export interface Order {  
+    OrderID: number;
+    StockTicker: string;
+    StockName: string;
+    TradeType: string;
+    OrderStatus: string;
+    Quantity: number;
+    PricePerShareDollars: number;
+    TotalOrderValueDollars: number;
+    CreatedAt: string;
+    Notes: string;
+}

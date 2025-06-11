@@ -11,9 +11,7 @@ import { useCallback } from 'react';
 
 const TradingDashboard = () => {
   
-    const userId = Number(useSearchParams().get('userId'));
-
-    const {user, setUser} = useUser();
+    const {user} = useUser();
     const [stocks, setStocks] = useState<Stock[]>([]);
     const [holdings, setHoldings] = useState<Holding[]>([]);
     const [portfolioValue, setPortfolioValue] = useState(0.00);
@@ -27,13 +25,13 @@ const TradingDashboard = () => {
     const [tradeQuantity, setTradeQuantity] = useState('');
 
     const quickTradeBuy = async () => {
-      if (!userId || !tradeSymbol || !tradeQuantity) return;
+      if (!user?.UserID || !tradeSymbol || !tradeQuantity) return;
       const quantity = parseInt(tradeQuantity);
       if (isNaN(quantity) || quantity <= 0) {
           console.error('Invalid quantity');
           return;
       }
-      const response = await buyStocks(userId, tradeSymbol, quantity);
+      const response = await buyStocks(user?.UserID, tradeSymbol, quantity);
       if (response == "") {
           console.log(`Bought ${quantity} shares of ${tradeSymbol}`);
           // Optionally, refresh holdings or stocks after a successful trade
@@ -46,13 +44,13 @@ const TradingDashboard = () => {
     };
 
     const quickTradeSell = async () => {
-      if (!userId || !tradeSymbol || !tradeQuantity) return;
+      if (!user?.UserID || !tradeSymbol || !tradeQuantity) return;
       const quantity = parseInt(tradeQuantity);
       if (isNaN(quantity) || quantity <= 0) {
           console.error('Invalid quantity');
           return;
       }
-      const response = await sellStocks(userId, tradeSymbol, quantity);
+      const response = await sellStocks(user?.UserID, tradeSymbol, quantity);
       if (response == "") {
           console.log(`Sold ${quantity} shares of ${tradeSymbol}`);
           // Optionally, refresh holdings or stocks after a successful trade
@@ -151,26 +149,26 @@ const TradingDashboard = () => {
     setTotalPnL(data.TotalPnLDollars || 0);
     setTotalPnLPercent(data.TotalReturnPercent || 0);
     setTotalHoldingValue(data.TotalHoldingValueDollars || 0);
-    setUser(data.User == null ? null : data.User);
     setLastUpdateTime(new Date())
-  }, [setUser])
+  }, [])
 
   const loadDashboard = useCallback(async () => {
-    const data = await getDashboardData(userId);
+    const data = await getDashboardData(user?.UserID || 0);
     if(data == null){
       console.error('Failed to fetch dashboard data');
       return;
     }
     setDashboardData(data);
-  }, [setDashboardData, userId]);
+  }, [setDashboardData, user]);
 
   useEffect(() => {
     loadDashboard();
-  }, [loadDashboard, setUser, userId]);
+  }, [loadDashboard, user]);
 
 
   const [dashboardWsStatus, setDashboardWsStatus] = useState(true);
   const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
+  const userIdForWS = Number(useSearchParams().get('userId')) || 0;
 
   useEffect(() => {
     // This effect runs once when the component mounts.
@@ -179,8 +177,10 @@ const TradingDashboard = () => {
     // The URL of your Go backend's WebSocket endpoint.
     // In development, this is localhost. For cloud deployment, you'd use a different URL
     // from an environment variable, e.g., `process.env.NEXT_PUBLIC_WEBSOCKET_URL`.
-    // const wsUrl = `ws://localhost:8080/trade-sim/ws/dashboard?userId=${userId}`;
-    const wsUrl = `wss://trading-platform-backend-6w4v.onrender.com/trade-sim/ws/dashboard?userId=${userId}`;
+
+
+    const wsUrl = `ws://localhost:8080/trade-sim/ws/dashboard?userId=${userIdForWS}`;
+    // const wsUrl = `wss://trading-platform-backend-6w4v.onrender.com/trade-sim/ws/dashboard?userId=${userIdForWS}`;
 
     // Create a new WebSocket connection.
     const ws = new WebSocket(wsUrl);
@@ -223,7 +223,7 @@ const TradingDashboard = () => {
     return () => {
       ws.close();
     };
-  }, []); // The empty dependency array `[]` ensures this effect runs only once on mount.
+  }, [setDashboardData, userIdForWS]); // The empty dependency array `[]` ensures this effect runs only once on mount.
 
 
   return (
