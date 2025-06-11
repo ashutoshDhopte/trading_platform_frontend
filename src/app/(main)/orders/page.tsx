@@ -5,7 +5,6 @@ import { useUser } from '@/components/UserContext';
 import { getOrders } from '@/lib/api';
 import { formatCurrency } from '@/lib/util';
 import { Order } from '@/type/model';
-import { useSearchParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
 const gridCols = "grid grid-cols-6 gap-2";

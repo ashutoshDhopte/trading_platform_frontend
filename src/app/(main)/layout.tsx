@@ -6,8 +6,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <UserProvider>
       <div>
-        <Navbar />
-       <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<div>Loading...</div>}>
+          <Navbar />
           <main>
             {children}
           </main>

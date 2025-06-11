@@ -62,28 +62,6 @@ const TradingDashboard = () => {
       }
     };
 
-  // Simulate real-time price updates
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     setStockData(prevData => 
-  //       prevData.map(stock => {
-  //         const change = (Math.random() - 0.5) * 10;
-  //         const newPrice = Math.max(stock.price + change, 1);
-  //         const changePercent = ((change / stock.price) * 100);
-          
-  //         return {
-  //           ...stock,
-  //           price: parseFloat(newPrice.toFixed(2)),
-  //           change: parseFloat(change.toFixed(2)),
-  //           changePercent: parseFloat(changePercent.toFixed(2))
-  //         };
-  //       })
-  //     );
-  //   }, 3000);
-
-  //   return () => clearInterval(interval);
-  // }, []);
-
 
   const StockItem = ({ stock, onClick }: { stock: Stock; onClick: () => void }) => (
     <div 

@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { formatCurrency } from '@/lib/util';
 import Link from 'next/link';
