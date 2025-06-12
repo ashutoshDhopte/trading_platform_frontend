@@ -32,7 +32,7 @@ const StockWatchlistPopup = ({ x, y, stockPrice, onAdd, setPopup }:
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [stockPrice]);
+  }, [setPopup, stockPrice]);
 
   return (
     <div
@@ -466,7 +466,10 @@ const TradingDashboard = () => {
 
             {/* Watchlist */}
             <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-xl hover:transform hover:-translate-y-1 transition-all duration-300 hover:border-white/20 hover:shadow-2xl">
-              <h3 className="text-xl font-semibold mb-5">Watchlist</h3>
+              <div className="flex justify-between items-center mb-5">
+                <h3 className="text-xl font-semibold">Watchlist</h3>
+                <div>Notification coming soon</div>
+              </div>
               <div>
                 {watchlist.map((stockWatchlist: StockWatchlist) => (
                   <WatchlistItem 
