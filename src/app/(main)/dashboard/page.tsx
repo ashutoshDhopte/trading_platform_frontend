@@ -1,17 +1,24 @@
 'use client';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { addStockToWatchlist, buyStocks, getDashboardData, sellStocks } from '@/lib/api';
-import { Dashboard, Holding, Stock } from '@/type/model';
-import { useState, useEffect } from 'react';
+import { addStockToWatchlist, buyStocks, deleteStockFromWatchlist, getDashboardData, sellStocks } from '@/lib/api';
+import { Dashboard, Holding, Stock, StockWatchlist } from '@/type/model';
+import { useState, useEffect, Key } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { formatCurrency } from '@/lib/util';
 import { useUser } from '@/components/UserContext';
 import { useCallback } from 'react';
 import { useRef } from 'react';
+import { CircleMinus, Eye, EyeOff } from 'lucide-react';
 
 // Popup component for adding to watchlist
-const StockWatchlistPopup = ({ x, y, stockPrice, onAdd }: { x: number, y: number, stockPrice: number, onAdd: (value: string) => void }) => {
+const StockWatchlistPopup = ({ x, y, stockPrice, onAdd, setPopup }: 
+  { x: number, 
+    y: number, 
+    stockPrice: number, 
+    onAdd: (value: string) => void, 
+    setPopup: (value: { x: number, y: number, stockId: number, stockPrice: number } | null) => void 
+  }) => {
   const [input, setInput] = useState('');
   const popupRef = useRef<HTMLDivElement>(null);
   
@@ -19,7 +26,9 @@ const StockWatchlistPopup = ({ x, y, stockPrice, onAdd }: { x: number, y: number
   useEffect(() => {
     setInput(stockPrice.toFixed(2).toString()); // Initialize with stock price as string
     function handleClick(e: MouseEvent) {
-      
+      if (popupRef.current && !popupRef.current.contains(e.target as Node)) {
+        setPopup(null); // Close popup on outside click
+      }
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
@@ -51,7 +60,7 @@ const StockWatchlistPopup = ({ x, y, stockPrice, onAdd }: { x: number, y: number
         style={{ width: '40%', display: 'block' }}
         onClick={() => { onAdd(input); }}
       >
-      Add
+      Watch
       </button>
     </div>
   );
@@ -66,8 +75,7 @@ const TradingDashboard = () => {
     const [totalPnL, setTotalPnL] = useState(0.00);
     const [totalPnLPercent, setTotalPnLPercent] = useState(0.00);
     const [totalHoldingValue, setTotalHoldingValue] = useState(0.00);
-
-    // const [watchlist, setWatchList] = useState([]);
+    const [watchlist, setWatchList] = useState<StockWatchlist[]>([]);
 
     const [tradeSymbol, setTradeSymbol] = useState('');
     const [tradeQuantity, setTradeQuantity] = useState('');
@@ -124,17 +132,12 @@ const TradingDashboard = () => {
       </div>
       </div>
       <div className="text-right flex items-center gap-2">
-      <div>
-        <div className="font-bold text-base">{formatCurrency(stock.CurrentPriceDollars)}</div>
-        <div className={`text-sm mt-1 ${stock.ChangedPriceDollars >= 0 ? 'text-green-400' : 'text-red-400'}`}>{stock.ChangedPriceDollars >= 0 ? '+' : ''}{formatCurrency(stock.ChangedPriceDollars)} ({stock.ChangedPercent >= 0 ? '+' : ''}{stock.ChangedPercent.toFixed(2)}%)</div>
-      </div>
-      {/* Eye Icon - always visible */}
-      <span className="ml-2 text-gray-400 cursor-pointer" onClick={onEyeClick}>
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M1.5 12s4-7.5 10.5-7.5S22.5 12 22.5 12s-4 7.5-10.5 7.5S1.5 12 1.5 12z" />
-        <circle cx="12" cy="12" r="3.5" />
-        </svg>
-      </span>
+        <div className="mr-2">
+          <div className="font-bold text-base">{formatCurrency(stock.CurrentPriceDollars)}</div>
+          <div className={`text-sm mt-1 ${stock.ChangedPriceDollars >= 0 ? 'text-green-400' : 'text-red-400'}`}>{stock.ChangedPriceDollars >= 0 ? '+' : ''}{formatCurrency(stock.ChangedPriceDollars)} ({stock.ChangedPercent >= 0 ? '+' : ''}{stock.ChangedPercent.toFixed(2)}%)</div>
+        </div>
+        {/* Eye Icon - always visible */}
+        <Eye className="text-gray-400 cursor-pointer" onClick={onEyeClick}/>
       </div>
     </div>
   );
@@ -161,20 +164,33 @@ const TradingDashboard = () => {
     </div>
   );
 
-  // const WatchlistItem = ({ item }) => (
-  //   <div className="flex justify-between items-center py-3 border-b border-white/5 last:border-b-0">
-  //     <div>
-  //       <div className="font-bold">{item.symbol}</div>
-  //       <div className="text-white/70 text-sm">{item.name}</div>
-  //     </div>
-  //     <div className="text-right">
-  //       <div className="font-bold">{formatCurrency(item.price)}</div>
-  //       <div className={`text-sm ${item.changePercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-  //         {item.changePercent >= 0 ? '+' : ''}{item.changePercent}%
-  //       </div>
-  //     </div>
-  //   </div>
-  // );
+  const WatchlistItem = ({ stockWatchlist, deleteStockFromWatchlist } : 
+    { 
+      stockWatchlist: StockWatchlist, 
+      deleteStockFromWatchlist: (stockId: number) => void
+    }) => (
+    <div className="group flex justify-between items-center py-3 border-b border-white/5 last:border-b-0">
+      <div className="flex items-center">
+        <span className="invisible group-hover:visible cursor-pointer">
+          <EyeOff 
+            size={18} 
+            className="text-red-500 hover:text-red-400" 
+            onClick={() => deleteStockFromWatchlist(stockWatchlist.StockId)}
+          />
+        </span>
+        <div className="pl-3">
+          <div className="font-bold">{stockWatchlist.StockTicker}</div>
+          <div className="text-white/70 text-sm">{stockWatchlist.StockName}</div>
+        </div>
+      </div>
+      <div className="text-right">
+        <div className="font-bold">{formatCurrency(stockWatchlist.TargetPriceDollars)}</div>
+        <div className={`text-sm ${stockWatchlist.DiffPercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+          {stockWatchlist.DiffPriceDollars >= 0 ? '+' : ''}{formatCurrency(stockWatchlist.DiffPriceDollars)} ({stockWatchlist.DiffPercent >= 0 ? '+' : ''}{stockWatchlist.DiffPercent.toFixed(2)}%)
+        </div>
+      </div>
+    </div>
+  );
 
   const setDashboardData = useCallback((data: Dashboard) => {
     setStocks(data.Stocks == null ? [] : data.Stocks);
@@ -183,6 +199,7 @@ const TradingDashboard = () => {
     setTotalPnL(data.TotalPnLDollars || 0);
     setTotalPnLPercent(data.TotalReturnPercent || 0);
     setTotalHoldingValue(data.TotalHoldingValueDollars || 0);
+    setWatchList(data.StockWatchlist == null ? [] : data.StockWatchlist);
     setLastUpdateTime(new Date())
   }, [])
 
@@ -269,6 +286,7 @@ const TradingDashboard = () => {
     if (response == "") {
         console.log(`Added stock ${stockId} to watchlist with target price ${targetPrice}`);
         setPopup(null); // Close the popup after adding
+        loadDashboard();
     } else {
         console.error('Failed to add stock to wathchlist: '+response);
     }
@@ -279,11 +297,22 @@ const TradingDashboard = () => {
   const handleEyeClick = (event: React.MouseEvent, stock: Stock) => {
     const rect = (event.target as HTMLElement).getBoundingClientRect();
     setPopup({
-      x: rect.left + window.scrollX - 207 + rect.width / 2, // center popup
+      x: rect.left + window.scrollX - 215 + rect.width / 2, // center popup
       y: rect.top + window.scrollY - 110, // above the icon
       stockId: stock.StockID,
       stockPrice: stock.CurrentPriceDollars
     });
+  };
+
+  const handleDeleteStockFromWatchlist = async (stockId: number) => {
+    if (!user?.UserID || !stockId) return;
+    const response = await deleteStockFromWatchlist(user?.UserID, stockId); // Assuming 0 means delete
+    if (response == "") {
+      console.log(`Deleted stock ${stockId} from watchlist`);
+      loadDashboard(); // Refresh the dashboard to reflect changes
+    } else {
+      console.error('Failed to delete stock from watchlist: ' + response);
+    }
   };
 
   return (
@@ -439,9 +468,13 @@ const TradingDashboard = () => {
             <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-xl hover:transform hover:-translate-y-1 transition-all duration-300 hover:border-white/20 hover:shadow-2xl">
               <h3 className="text-xl font-semibold mb-5">Watchlist</h3>
               <div>
-                {/* {watchlist.map((item) => (
-                  <WatchlistItem key={item.symbol} item={item} />
-                ))} */}
+                {watchlist.map((stockWatchlist: StockWatchlist) => (
+                  <WatchlistItem 
+                    key={stockWatchlist.StockTicker} 
+                    stockWatchlist={stockWatchlist} 
+                    deleteStockFromWatchlist={handleDeleteStockFromWatchlist}
+                  />
+                ))}
               </div>
             </div>
 
@@ -454,6 +487,7 @@ const TradingDashboard = () => {
             x={popup.x}
             y={popup.y}
             stockPrice={popup.stockPrice}
+            setPopup={setPopup}
             onAdd={val => addStockToWatchlistApiCall(popup.stockId, val)}
           />
         )}

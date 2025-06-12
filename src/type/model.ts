@@ -41,6 +41,7 @@ export class Dashboard{
         public User: User,
         public Stocks: Stock[],
         public Holdings: Holding[],
+        public StockWatchlist: StockWatchlist[],
         public TotalHoldingValueDollars: number,
         public PortfolioValueDollars: number,
         public TotalPnLDollars: number,
@@ -65,4 +66,17 @@ export interface Order {
     TotalOrderValueDollars: number;
     CreatedAt: string;
     Notes: string;
+}
+
+export interface StockWatchlist {
+    StockWatchlistID: number;
+    UserId: number;
+    StockId: number;
+    StockTicker: string
+    StockName: string;
+    TargetPriceDollars: number;
+    DiffPriceDollars: number;
+    DiffPercent: number;
+    IsActive: boolean;
+    CreatedAt: string;
 }
