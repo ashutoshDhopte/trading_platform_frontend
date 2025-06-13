@@ -189,14 +189,23 @@ const TradingDashboard = () => {
     }) => (
     <div className="group flex justify-between items-center py-3 border-b border-white/5 last:border-b-0">
       <div className="flex items-center">
-        <span className="invisible group-hover:visible cursor-pointer">
-          <EyeOff 
-            size={18} 
-            className="text-red-500 hover:text-red-400" 
-            onClick={() => deleteStockFromWatchlist(stockWatchlist.StockId)}
+        {(
+          <span
+            className="absolute right-3 mr-3"
+            style={{ display: 'none' }}
+            aria-hidden="true"
           />
-        </span>
-        <div className="pl-3">
+        ) /* placeholder for layout shift prevention */}
+        {(
+          <span className="group-hover:inline-block hidden cursor-pointer">
+            <EyeOff
+              size={18}
+              className="text-red-500 hover:text-red-400 mr-3"
+              onClick={() => deleteStockFromWatchlist(stockWatchlist.StockId)}
+            />
+          </span>
+        )}
+        <div>
           <div className="font-bold">{stockWatchlist.StockTicker}</div>
           <div className="text-white/70 text-sm">{stockWatchlist.StockName}</div>
         </div>
