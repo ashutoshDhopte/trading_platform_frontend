@@ -378,6 +378,16 @@ const TradingDashboard = () => {
     }
   };
 
+  // Hydration-safe formatted time for last update
+  const [formattedTime, setFormattedTime] = useState('');
+  useEffect(() => {
+    setFormattedTime(
+      lastUpdateTime.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) +
+      ' ' +
+      lastUpdateTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    );
+  }, [lastUpdateTime]);
+
   return (
     <section className="relative section-padding flex min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-indigo-900 text-white">
       <div className="max-w-7xl mx-auto p-5 mt-35 relative">
@@ -431,18 +441,7 @@ const TradingDashboard = () => {
                     </svg>
                   )}
                     <span className='pl-2 text-sm text-white/70'>
-                    Last updated:&nbsp;&nbsp;
-                    {lastUpdateTime.toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric'
-                    })}{' '}
-                    {lastUpdateTime.toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit'
-                    })}
-                    &nbsp;&nbsp; (Updates every 15 seconds)
+                  Last updated:&nbsp;&nbsp;{formattedTime}&nbsp;&nbsp; (Updates every 15 seconds)
                     </span>
                  </div>
               </div>
@@ -451,7 +450,11 @@ const TradingDashboard = () => {
                   <StockItem 
                     key={stock.StockID} 
                     stock={stock} 
-                    onClick={() => console.log(`Clicked ${stock.Ticker}`)}
+                    onClick={() => {
+                      // Handle stock click, e.g., navigate to stock details page
+                      console.log(`Clicked on stock: ${stock.Ticker}`);
+                      }
+                    }
                     onEyeClick={(e) => handleEyeClick(e, stock)}
                   />
                 ))}
@@ -469,6 +472,8 @@ const TradingDashboard = () => {
                 </div>
               </div>
             </div>
+
+
           </div>
 
           {/* Right Panel - 1/3 width */}
@@ -517,14 +522,6 @@ const TradingDashboard = () => {
                   <HoldingItem key={holding.StockTicker} holding={holding} />
                 ))}
               </div>
-              {/* <div className="flex gap-3 mt-5">
-                <button className="flex-1 py-3 px-6 bg-gradient-to-r from-green-400 to-cyan-400 text-black rounded-lg font-semibold hover:transform hover:-translate-y-1 transition-all duration-300 hover:shadow-lg">
-                  Buy More
-                </button>
-                <button className="flex-1 py-3 px-6 bg-red-500/20 text-red-400 border border-red-500 rounded-lg font-semibold hover:bg-red-500 hover:text-white transition-all duration-300">
-                  Sell
-                </button>
-              </div> */}
             </div>
 
             {/* Watchlist */}
