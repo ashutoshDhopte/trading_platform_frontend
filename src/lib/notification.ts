@@ -1,4 +1,3 @@
-import { useUser } from "@/components/UserContext";
 
 export function requestNotificationPermission() {
   if (!("Notification" in window)) {
