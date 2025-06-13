@@ -6,7 +6,8 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useUser } from './UserContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getUser, getUserById } from '@/lib/api';
+import { getUser, getUserById, updateUserSettings } from '@/lib/api';
+import { LogOut } from 'lucide-react';
 
 // Create a map for tab names and their corresponding paths outside the component
 const tabPaths = [
@@ -51,6 +52,38 @@ const Navbar = () => {
         fetchUserById(userId);
         
     }, [setUser, userId]);
+
+    const updateUserSettingApiCall = async (userSettings: Map<string, unknown>) => {
+        try {
+            if (!user || !user.UserID) {
+                console.error('User not found or UserID is missing');
+                return;
+            }
+
+            if(!userSettings || userSettings.size === 0) {
+                //set all user settings
+                userSettings = new Map<string, unknown>([
+                    ['NotificationsOn', true], // Example setting, replace with actual settings
+                ]);
+            }   
+            const responseUser = await updateUserSettings(user.UserID, userSettings);
+            if (!responseUser) {
+                console.error('Failed to update user settings');
+            } else {
+                console.log('User settings updated successfully');
+                setUser(responseUser);
+            }
+        } catch (error) {
+            console.error('Error to update user settings:', error);
+        }
+    };
+
+    const updateSingleUserSettingApiCall = async (key: string, value: unknown) => {
+        const userSettings = new Map<string, unknown>([
+            [key, value], 
+        ]);
+        updateUserSettingApiCall(userSettings);
+    };
 
 
     return(
@@ -115,19 +148,42 @@ const Navbar = () => {
                                     </svg>
                                     Profile
                                 </Link> */}
-                                <button
-                                    className="flex items-center w-full px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
-                                    onClick={() => {
-                                        setShowProfilePopup(false);
-                                        // Add logout logic here
-                                        router.push('/');
-                                    }}
-                                >
-                                    <svg className="w-5 h-5 mr-2 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" />
-                                    </svg>
-                                    Logout
-                                </button>
+
+                                <div className="flex items-center px-4 py-2 justify-between">
+                                    <span className="pr-3 text-gray-700">Notifications</span>
+                                    <button
+                                        type="button"
+                                        aria-pressed={user?.NotificationsOn ? 'true' : 'false'}
+                                        className={`cursor-pointer relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none align-right ${
+                                            user?.NotificationsOn ? 'bg-violet-200' : 'bg-gray-300'
+                                        }`}
+                                        onClick={() => updateSingleUserSettingApiCall('notifications', !user?.NotificationsOn)}
+                                    >
+                                        <span
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform align-right ${
+                                                user?.NotificationsOn ? 'translate-x-5' : 'translate-x-1'
+                                            }`}
+                                        />
+                                    </button>
+                                </div>
+
+
+                                <div className="flex items-center px-4 py-2 text-red-800 hover:bg-red-100 cursor-pointer justify-between">
+                                    <span className="pr-3 text-gray-700">Logout</span>
+                                    <button
+                                        type="button"
+                                        aria-pressed={true ? 'true' : 'false'}
+                                        className={`cursor-pointer relative inline-flex h-6 w-6 items-center rounded-full transition-colors focus:outline-none align-right`}
+                                        onClick={() => {
+                                            setShowProfilePopup(false);
+                                            // Add logout logic here
+                                            router.push('/');
+                                        }}
+                                    >
+                                        <LogOut className='text-red-600' />
+                                    </button>
+                                </div>
+
                             </div>
                         )}
                     </div>

@@ -151,3 +151,19 @@ export const deleteStockFromWatchlist = async (userId: number, stockId: number):
 
   return "";
 }
+
+export const updateUserSettings = async (userId: number, settings: Map<string, unknown>): Promise<User | null> => {
+  const res = await axios.post(`${API_BASE}/update-user-setting`, {
+    userId: userId,
+    settings: Object.fromEntries(settings)
+  });
+
+  const data = res.data as ApiResponse;
+  // console.log(data);
+  if(!data.Success){
+    console.error(data.ErrorMessage);
+    return null;
+  }
+
+  return data.Data as User;
+}

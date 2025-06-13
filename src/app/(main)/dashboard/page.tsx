@@ -3,13 +3,14 @@
 
 import { addStockToWatchlist, buyStocks, deleteStockFromWatchlist, getDashboardData, sellStocks } from '@/lib/api';
 import { Dashboard, Holding, Stock, StockWatchlist } from '@/type/model';
-import { useState, useEffect, Key } from 'react';
+import { useState, useEffect, Key, use } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { formatCurrency } from '@/lib/util';
 import { useUser } from '@/components/UserContext';
 import { useCallback } from 'react';
 import { useRef } from 'react';
-import { CircleMinus, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
+import { showNotificationUtil } from '@/lib/notification';
 
 // Popup component for adding to watchlist
 const StockWatchlistPopup = ({ x, y, stockPrice, onAdd, setPopup }: 
@@ -80,6 +81,11 @@ const TradingDashboard = () => {
     const [tradeSymbol, setTradeSymbol] = useState('');
     const [tradeQuantity, setTradeQuantity] = useState('');
 
+    const showNotification = ((title: string, options: NotificationOptions) => {
+      if(!user || !user.NotificationsOn) return;
+      showNotificationUtil(title, options);
+    });
+
     const quickTradeBuy = async () => {
       if (!user?.UserID || !tradeSymbol || !tradeQuantity) return;
       const quantity = parseInt(tradeQuantity);
@@ -94,8 +100,14 @@ const TradingDashboard = () => {
           setTradeSymbol('');
           setTradeQuantity('');
           loadDashboard()
+          showNotification(`Trade Executed!!`, {
+            body: `Successfully purchased ${quantity} shares of ${tradeSymbol}`
+          });
       } else {
           console.error('Failed to buy stocks: '+response);
+          showNotification(`Trade Failed`, {
+            body: `Failed to purchase ${quantity} shares of ${tradeSymbol}: ${response}`
+          });
       }
     };
 
@@ -113,8 +125,14 @@ const TradingDashboard = () => {
           setTradeSymbol('');
           setTradeQuantity('');
           loadDashboard()
+          showNotification(`Trade Executed!!`, {
+            body: `Successfully sold ${quantity} shares of ${tradeSymbol}`
+          });
       } else {
           console.error('Failed to buy stocks: '+response);
+          showNotification(`Trade Failed`, {
+            body: `Failed to sell ${quantity} shares of ${tradeSymbol}: ${response}`
+          });
       }
     };
 
@@ -192,6 +210,16 @@ const TradingDashboard = () => {
     </div>
   );
 
+  const watchlistNotification = useCallback((stockWatchlist: StockWatchlist[]) => {
+    for(const watch of stockWatchlist) {
+      if (watch.DiffPercent == 0) {
+        showNotification(`Watchlist Alert: ${watch.StockTicker}`, {
+          body: `Target price (${formatCurrency(watch.TargetPriceDollars)}) acheived!!`
+        });
+      }
+    }
+  }, []);
+
   const setDashboardData = useCallback((data: Dashboard) => {
     setStocks(data.Stocks == null ? [] : data.Stocks);
     setHoldings(data.Holdings == null ? [] : data.Holdings);
@@ -201,7 +229,8 @@ const TradingDashboard = () => {
     setTotalHoldingValue(data.TotalHoldingValueDollars || 0);
     setWatchList(data.StockWatchlist == null ? [] : data.StockWatchlist);
     setLastUpdateTime(new Date())
-  }, [])
+    watchlistNotification(data.StockWatchlist || []);
+  }, [watchlistNotification])
 
   const loadDashboard = useCallback(async () => {
     const data = await getDashboardData(user?.UserID || 0);
@@ -275,6 +304,7 @@ const TradingDashboard = () => {
   }, [setDashboardData, userIdForWS]); // The empty dependency array `[]` ensures this effect runs only once on mount.
 
   const addStockToWatchlistApiCall = async (stockId: number, targetPriceStr: string) => {
+
     console.log(`Adding stock ${stockId} to watchlist with target price ${targetPriceStr}`);
     if (!user?.UserID || !stockId || !targetPriceStr) return;
     const targetPrice = parseFloat(targetPriceStr);
@@ -287,8 +317,26 @@ const TradingDashboard = () => {
         console.log(`Added stock ${stockId} to watchlist with target price ${targetPrice}`);
         setPopup(null); // Close the popup after adding
         loadDashboard();
+
+        for(const stock of stocks) {
+          if (stock.StockID === stockId) {
+            showNotification(`Watchlist Updated`, {
+              body: `Added stock ${stock.Ticker} to watchlist with target price ${formatCurrency(targetPrice)}`
+            });
+            break;
+          }
+        }
+         
     } else {
         console.error('Failed to add stock to wathchlist: '+response);
+        for(const stock of stocks) {
+          if (stock.StockID === stockId) {
+            showNotification(`Failed to update watchlist`, {
+              body: `Failed to add stock ${stock.Ticker} to watchlist: ${response}`
+            });
+            break;
+          }
+        }
     }
   };
 
@@ -310,8 +358,14 @@ const TradingDashboard = () => {
     if (response == "") {
       console.log(`Deleted stock ${stockId} from watchlist`);
       loadDashboard(); // Refresh the dashboard to reflect changes
+      showNotification(`Watchlist Updated`, {
+        body: `Deleted stock from watchlist`
+      });
     } else {
       console.error('Failed to delete stock from watchlist: ' + response);
+      showNotification(`Failed to update watchlist`, {
+        body: `Failed to delete stock from watchlist: ${response}`
+      });
     }
   };
 
@@ -386,7 +440,7 @@ const TradingDashboard = () => {
               <div className="space-y-3">
                 {stocks.map((stock) => (
                   <StockItem 
-                    key={stock.Ticker} 
+                    key={stock.StockID} 
                     stock={stock} 
                     onClick={() => console.log(`Clicked ${stock.Ticker}`)}
                     onEyeClick={(e) => handleEyeClick(e, stock)}
@@ -468,7 +522,6 @@ const TradingDashboard = () => {
             <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-xl hover:transform hover:-translate-y-1 transition-all duration-300 hover:border-white/20 hover:shadow-2xl">
               <div className="flex justify-between items-center mb-5">
                 <h3 className="text-xl font-semibold">Watchlist</h3>
-                <div>Notification coming soon</div>
               </div>
               <div>
                 {watchlist.map((stockWatchlist: StockWatchlist) => (

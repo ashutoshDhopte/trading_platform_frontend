@@ -6,7 +6,8 @@ export class User{
         public Email: string,
         public CashBalanceDollars: number,
         public CreatedAt: string,
-        public UpdatedAt: string
+        public UpdatedAt: string,
+        public NotificationsOn: boolean,
     ) {}
 }
 
