@@ -6,8 +6,9 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useUser } from './UserContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getUser, getUserById, updateUserSettings } from '@/lib/api';
+import { getUserById, updateUserSettings } from '@/lib/api';
 import { LogOut } from 'lucide-react';
+import { showNotificationUtil } from '@/lib/notification';
 
 // Create a map for tab names and their corresponding paths outside the component
 const tabPaths = [
@@ -85,6 +86,37 @@ const Navbar = () => {
         updateUserSettingApiCall(userSettings);
     };
 
+    function requestNotificationPermission() {
+        if (!("Notification" in window)) {
+            console.log("This browser does not support desktop notification");
+            return;
+        }
+
+        if (Notification.permission === "granted") {
+            console.log("Permission to receive notifications has already been granted.");
+            return;
+        }
+
+        Notification.requestPermission().then((permission) => {
+            if (permission === "granted") {
+                console.log("Permission to receive notifications was granted.");
+                // You could show a confirmation notification here
+                showNotificationUtil("Notifications Enabled!", {
+                    body: "You will now receive updates from the trading platform.",
+                });
+                updateSingleUserSettingApiCall('notifications', !user?.NotificationsOn);
+            }
+        });
+    }
+
+    const updateNotificationSetting = async () => {
+        if(Notification.permission !== "granted") {
+            requestNotificationPermission();
+        }else{
+            updateSingleUserSettingApiCall('notifications', !user?.NotificationsOn);
+        }
+    };
+
 
     return(
 
@@ -155,9 +187,9 @@ const Navbar = () => {
                                         type="button"
                                         aria-pressed={user?.NotificationsOn ? 'true' : 'false'}
                                         className={`cursor-pointer relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none align-right ${
-                                            user?.NotificationsOn ? 'bg-violet-200' : 'bg-gray-300'
+                                            user?.NotificationsOn ? 'bg-violet-400' : 'bg-gray-300'
                                         }`}
-                                        onClick={() => updateSingleUserSettingApiCall('notifications', !user?.NotificationsOn)}
+                                        onClick={() => updateNotificationSetting()}
                                     >
                                         <span
                                             className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform align-right ${
