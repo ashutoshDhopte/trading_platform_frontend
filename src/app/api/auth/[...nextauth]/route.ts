@@ -27,6 +27,7 @@ const handler = NextAuth({
             credentials: {
                 email: { label: "Email", type: "email" },
                 password: { label: "Password", type: "password" },
+                verifyPassword: { label: "VerifyPassword", type: "password" },
                 authType: { label: "AuthType", type: "text" }, 
             },
             async authorize(credentials) {
@@ -35,7 +36,7 @@ const handler = NextAuth({
                 try {
                     let auth = null;
                     if(credentials.authType == 'signin'){
-                        auth = await createAccount(credentials.email, credentials.password, credentials.password);
+                        auth = await createAccount(credentials.email, credentials.password, credentials.verifyPassword);
                     }else{
                         auth = await login(credentials.email, credentials.password);
                     }

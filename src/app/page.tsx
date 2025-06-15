@@ -44,6 +44,7 @@ export default function Home() {
         result = await signIn("credentials", {
           email: form.email,
           password: form.password,
+          verifyPassword: form.verifyPassword,
           authType: "signin",
           redirect: false
         })
