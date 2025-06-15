@@ -81,3 +81,8 @@ export interface StockWatchlist {
     IsActive: boolean;
     CreatedAt: string;
 }
+
+export interface Auth {
+    UserId: number,
+    Token: string
+}

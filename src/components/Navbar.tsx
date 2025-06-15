@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { getUserById, updateUserSettings } from '@/lib/api';
 import { LogOut } from 'lucide-react';
 import { showNotificationUtil } from '@/lib/notification';
+import { signOut } from 'next-auth/react';
 
 // Create a map for tab names and their corresponding paths outside the component
 const tabPaths = [
@@ -117,6 +118,11 @@ const Navbar = () => {
         }
     };
 
+    function logout(){
+        setShowProfilePopup(false);
+        signOut({ callbackUrl: '/' });
+    }
+
 
     return(
 
@@ -200,17 +206,15 @@ const Navbar = () => {
                                 </div>
 
 
-                                <div className="flex items-center px-4 py-2 text-red-800 hover:bg-red-100 cursor-pointer justify-between">
+                                <div 
+                                    className="flex items-center px-4 py-2 text-red-800 hover:bg-red-100 cursor-pointer justify-between"
+                                    onClick={() => logout()}
+                                >
                                     <span className="pr-3 text-gray-700">Logout</span>
                                     <button
                                         type="button"
                                         aria-pressed={true ? 'true' : 'false'}
                                         className={`cursor-pointer relative inline-flex h-6 w-6 items-center rounded-full transition-colors focus:outline-none align-right`}
-                                        onClick={() => {
-                                            setShowProfilePopup(false);
-                                            // Add logout logic here
-                                            router.push('/');
-                                        }}
                                     >
                                         <LogOut className='text-red-600' />
                                     </button>

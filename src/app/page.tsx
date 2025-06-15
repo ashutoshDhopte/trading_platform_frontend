@@ -1,8 +1,8 @@
 'use client'
 
-import { createAccount, login } from "@/lib/api";
+import { getSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 export default function Home() {
   const router = useRouter();
@@ -30,32 +30,50 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    let userId = 0;
 
     try {
+      let result;
       if (isLogin) {
-        const data = await login(form.email, form.password);
-        if (data.Success) {
-          userId = data.Data as number;
-          router.push(`/dashboard?userId=${userId}`);
-        } else {
-          console.error("Login failed: " + data.ErrorMessage);
-        }
+        result = await signIn("credentials", {
+          email: form.email,
+          password: form.password,
+          authType: "login",
+          redirect: false
+        })
       } else {
-        const data = await createAccount(form.email, form.password, form.verifyPassword);
-        if (data.Success) {
-          userId = data.Data as number;
-          router.push(`/dashboard?userId=${userId}`);
-        } else {
-          console.error("Signup failed: " + data.ErrorMessage);
+        result = await signIn("credentials", {
+          email: form.email,
+          password: form.password,
+          authType: "signin",
+          redirect: false
+        })
+      }
+
+      if(result?.ok){
+        const session = await getSession();
+        if(session){
+          router.push(`/dashboard?userId=${session.userId}`);
         }
       }
+
     } catch (error) {
       console.error(isLogin ? "Login failed with error: " : "Signup failed with error: ", error);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const fetchSession = async () => {
+      const session = await getSession();
+      if(session){
+        router.push(`/dashboard?userId=${session.userId}`);
+      }else{
+        console.log("No session");
+      }
+    };
+    fetchSession();
+  }, [router]);
 
   return (
     <div className="bg-gray-900 text-white min-h-screen flex flex-col justify-center items-center h-screen">

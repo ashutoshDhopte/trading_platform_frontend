@@ -257,7 +257,8 @@ const TradingDashboard = () => {
 
   const [dashboardWsStatus, setDashboardWsStatus] = useState(true);
   const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
-  const userIdForWS = Number(useSearchParams().get('userId')) || 0;
+  const searchParams = useSearchParams();
+  const userIdForWS = Number(searchParams.get('userId')) || 0;
 
   useEffect(() => {
     // This effect runs once when the component mounts.

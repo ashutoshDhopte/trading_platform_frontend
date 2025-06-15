@@ -1,4 +1,4 @@
-import { ApiResponse, Dashboard, Order, User } from '@/type/model';
+import { ApiResponse, Auth, Dashboard, Order, User } from '@/type/model';
 import axios from 'axios';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
@@ -78,7 +78,7 @@ export const sellStocks = async (userId: number, ticker: string, quantity: numbe
   return ""
 }
 
-export const login = async (email: string, password: string): Promise<ApiResponse> => {
+export const login = async (email: string, password: string): Promise<Auth | null> => {
   const res = await axios.get(`${API_BASE}/login`, {
     params: {
       email: email,
@@ -86,10 +86,16 @@ export const login = async (email: string, password: string): Promise<ApiRespons
     }
   });
 
-  return res.data as ApiResponse;
+  const data = res.data as ApiResponse
+  if(!data.Success){
+    console.log(data.ErrorMessage);
+    return null
+  }
+
+  return data.Data as Auth;
 }
 
-export const createAccount = async (email: string, password: string, verifyPassword: string): Promise<ApiResponse> => {
+export const createAccount = async (email: string, password: string, verifyPassword: string): Promise<Auth | null> => {
   const res = await axios.get(`${API_BASE}/create-account`, {
     params: {
       email: email,
@@ -98,10 +104,17 @@ export const createAccount = async (email: string, password: string, verifyPassw
     }
   });
 
-  return res.data as ApiResponse;
+  const data = res.data as ApiResponse
+  if(!data.Success){
+    console.log(data.ErrorMessage);
+    return null
+  }
+
+  return data.Data as Auth;
 }
 
 export const getOrders = async (userId: number): Promise<Order[]> => {
+  // const session = await getSession();
   const res = await axios.get(`${API_BASE}/orders`, {
     params: {
       userId: userId
