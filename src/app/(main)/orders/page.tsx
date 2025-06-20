@@ -5,6 +5,7 @@ import { useUser } from '@/components/UserContext';
 import { getOrders } from '@/lib/api';
 import { formatCurrency } from '@/lib/util';
 import { Order } from '@/type/model';
+import { getSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 
 const gridCols = "grid grid-cols-6 gap-2";
@@ -49,7 +50,9 @@ const OrdersPage = () => {
 
     useEffect(() => {
         const getOrdersFromApi = async () => {
-            const orders = await getOrders(userId); 
+            const session = await getSession(); 
+            const token = session?.backendToken || ""
+            const orders = await getOrders(userId, token); 
             setOrders(orders);
         };
 

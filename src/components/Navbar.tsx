@@ -5,11 +5,11 @@ import { formatCurrency } from '@/lib/util';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useUser } from './UserContext';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { getUserById, updateUserSettings } from '@/lib/api';
 import { LogOut } from 'lucide-react';
 import { showNotificationUtil } from '@/lib/notification';
-import { signOut } from 'next-auth/react';
+import { getSession, signOut } from 'next-auth/react';
 
 // Create a map for tab names and their corresponding paths outside the component
 const tabPaths = [
@@ -21,7 +21,6 @@ const tabPaths = [
 
 const Navbar = () => {
 
-    const router = useRouter();
     const [activeTab, setActiveTab] = useState<string>();
     const [showProfilePopup, setShowProfilePopup] = useState<boolean>(false);
     const { user, setUser } = useUser();
@@ -39,8 +38,10 @@ const Navbar = () => {
 
 
         const fetchUserById = async (id: number) => {
+            const session = await getSession(); 
+            const token = session?.backendToken || ""
             try {
-                const userData = await getUserById(id);
+                const userData = await getUserById(id, token);
                 if (userData) {
                     setUser(userData);
                 } else {
@@ -68,7 +69,9 @@ const Navbar = () => {
                     ['NotificationsOn', true], // Example setting, replace with actual settings
                 ]);
             }   
-            const responseUser = await updateUserSettings(user.UserID, userSettings);
+            const session = await getSession(); 
+            const token = session?.backendToken || ""
+            const responseUser = await updateUserSettings(user.UserID, userSettings, token);
             if (!responseUser) {
                 console.error('Failed to update user settings');
             } else {

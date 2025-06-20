@@ -11,6 +11,7 @@ import { useCallback } from 'react';
 import { useRef } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { showNotificationUtil } from '@/lib/notification';
+import { getSession } from 'next-auth/react';
 
 // Popup component for adding to watchlist
 const StockWatchlistPopup = ({ x, y, stockPrice, onAdd, setPopup }: 
@@ -93,7 +94,9 @@ const TradingDashboard = () => {
           console.error('Invalid quantity');
           return;
       }
-      const response = await buyStocks(user?.UserID, tradeSymbol, quantity);
+      const session = await getSession(); 
+      const token = session?.backendToken || ""
+      const response = await buyStocks(user?.UserID, tradeSymbol, quantity, token);
       if (response == "") {
           console.log(`Bought ${quantity} shares of ${tradeSymbol}`);
           // Optionally, refresh holdings or stocks after a successful trade
@@ -118,7 +121,9 @@ const TradingDashboard = () => {
           console.error('Invalid quantity');
           return;
       }
-      const response = await sellStocks(user?.UserID, tradeSymbol, quantity);
+      const session = await getSession(); 
+      const token = session?.backendToken || ""
+      const response = await sellStocks(user?.UserID, tradeSymbol, quantity, token);
       if (response == "") {
           console.log(`Sold ${quantity} shares of ${tradeSymbol}`);
           // Optionally, refresh holdings or stocks after a successful trade
@@ -242,7 +247,9 @@ const TradingDashboard = () => {
   }, [watchlistNotification])
 
   const loadDashboard = useCallback(async () => {
-    const data = await getDashboardData(user?.UserID || 0);
+    const session = await getSession(); 
+    const token = session?.backendToken || ""
+    const data = await getDashboardData(user?.UserID || 0, token);
     if(data == null){
       console.error('Failed to fetch dashboard data');
       return;
@@ -253,7 +260,6 @@ const TradingDashboard = () => {
   useEffect(() => {
     loadDashboard();
   }, [loadDashboard, user]);
-
 
   const [dashboardWsStatus, setDashboardWsStatus] = useState(true);
   const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
@@ -322,7 +328,9 @@ const TradingDashboard = () => {
         console.error('Invalid target price');
         return;
     }
-    const response = await addStockToWatchlist(user?.UserID, stockId, targetPrice);
+    const session = await getSession(); 
+    const token = session?.backendToken || ""
+    const response = await addStockToWatchlist(user?.UserID, stockId, targetPrice, token);
     if (response == "") {
         console.log(`Added stock ${stockId} to watchlist with target price ${targetPrice}`);
         setPopup(null); // Close the popup after adding
@@ -364,7 +372,9 @@ const TradingDashboard = () => {
 
   const handleDeleteStockFromWatchlist = async (stockId: number) => {
     if (!user?.UserID || !stockId) return;
-    const response = await deleteStockFromWatchlist(user?.UserID, stockId); // Assuming 0 means delete
+    const session = await getSession(); 
+    const token = session?.backendToken || ""
+    const response = await deleteStockFromWatchlist(user?.UserID, stockId, token); // Assuming 0 means delete
     if (response == "") {
       console.log(`Deleted stock ${stockId} from watchlist`);
       loadDashboard(); // Refresh the dashboard to reflect changes

@@ -4,6 +4,7 @@ import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { createAccount, login } from "@/lib/api";
+import { getSession } from "next-auth/react";
 
 declare module "next-auth" {
     interface User {
@@ -16,7 +17,7 @@ declare module "next-auth" {
     }
 }
 
-const handler = NextAuth({
+export const handler = NextAuth({
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -35,10 +36,12 @@ const handler = NextAuth({
                 if (!credentials?.email || !credentials?.password) return null;
                 try {
                     let auth = null;
+                    const session = await getSession(); 
+                    const token = session?.backendToken || ""
                     if(credentials.authType == 'signin'){
-                        auth = await createAccount(credentials.email, credentials.password, credentials.verifyPassword);
+                        auth = await createAccount(credentials.email, credentials.password, credentials.verifyPassword, token);
                     }else{
-                        auth = await login(credentials.email, credentials.password);
+                        auth = await login(credentials.email, credentials.password, token);
                     }
                     if (auth && auth.Token) {
                         // Ensure the returned object matches the User type
