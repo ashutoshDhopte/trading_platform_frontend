@@ -1,10 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import NextAuth from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
+import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { createAccount, login } from "@/lib/api";
-import { getSession } from "next-auth/react";
 
 declare module "next-auth" {
     interface User {
@@ -17,36 +15,33 @@ declare module "next-auth" {
     }
 }
 
-export const handler = NextAuth({
+const authOptions: NextAuthOptions = {
+    secret: process.env.NEXTAUTH_SECRET,
     providers: [
-        GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID as string,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-        }),
         CredentialsProvider({
             name: "Credentials",
             credentials: {
                 email: { label: "Email", type: "email" },
                 password: { label: "Password", type: "password" },
                 verifyPassword: { label: "VerifyPassword", type: "password" },
-                authType: { label: "AuthType", type: "text" }, 
+                authType: { label: "AuthType", type: "text" },
             },
             async authorize(credentials) {
-                console.log("inside authorize")
+                // The authorize function is for validating credentials and creating a session,
+                // not for getting an existing one. The incorrect call to getSession is removed.
                 if (!credentials?.email || !credentials?.password) return null;
+
                 try {
                     let auth = null;
-                    const session = await getSession(); 
-                    const token = session?.backendToken || ""
-                    if(credentials.authType == 'signin'){
-                        auth = await createAccount(credentials.email, credentials.password, credentials.verifyPassword, token);
-                    }else{
-                        auth = await login(credentials.email, credentials.password, token);
+                    if (credentials.authType === 'signin' && credentials.verifyPassword) {
+                        auth = await createAccount(credentials.email, credentials.password, credentials.verifyPassword);
+                    } else {
+                        auth = await login(credentials.email, credentials.password);
                     }
+
                     if (auth && auth.Token) {
-                        // Ensure the returned object matches the User type
                         return {
-                            id: auth.UserId ? String(auth.UserId) : credentials.email, // fallback to email if UserId is missing
+                            id: auth.UserId ? String(auth.UserId) : credentials.email,
                             email: credentials.email,
                             backendToken: auth.Token,
                         };
@@ -59,37 +54,23 @@ export const handler = NextAuth({
         }),
     ],
     callbacks: {
-        async signIn({ user, account }) {
-            console.log("inside singIn")
-            if (account?.provider === "google") {
-                // try {
-                //     // Use login from api.ts for Google login
-                //     const auth = await login();
-                //     if (!auth?.Token) return false;
-                //     user.backendToken = auth.Token;
-                //     return true;
-                // } catch (error) {
-                //     console.error("Error communicating with Go backend:", error);
-                //     return false;
-                // }
-            }
-            return true;
-        },
         async jwt({ token, user }) {
             if (user) {
                 token.backendToken = user.backendToken;
-                token.userId = user.id
+                token.userId = user.id;
             }
             return token;
         },
         async session({ session, token }) {
             if (token) {
                 session.backendToken = String(token.backendToken);
-                session.userId = String(token.userId)
+                session.userId = String(token.userId);
             }
             return session;
         },
     },
-});
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };

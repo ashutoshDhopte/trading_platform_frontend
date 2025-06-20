@@ -1,5 +1,4 @@
 'use client';
-/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { useUser } from '@/components/UserContext';
 import { getOrders } from '@/lib/api';

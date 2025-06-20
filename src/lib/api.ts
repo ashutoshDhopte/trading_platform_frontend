@@ -106,15 +106,11 @@ export const sellStocks = async (userId: number, ticker: string, quantity: numbe
   return ""
 }
 
-export const login = async (email: string, password: string, token: string): Promise<Auth | null> => {
+export const login = async (email: string, password: string): Promise<Auth | null> => {
   const res = await axios.get(`${API_BASE}/login`, {
     params: {
       email: email,
       password: password
-    },
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
     }
   });
 
@@ -127,16 +123,12 @@ export const login = async (email: string, password: string, token: string): Pro
   return data.Data as Auth;
 }
 
-export const createAccount = async (email: string, password: string, verifyPassword: string, token: string): Promise<Auth | null> => {
+export const createAccount = async (email: string, password: string, verifyPassword: string): Promise<Auth | null> => {
   const res = await axios.get(`${API_BASE}/create-account`, {
     params: {
       email: email,
       password: password,
       verifyPassword: verifyPassword
-    },
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
     }
   });
 

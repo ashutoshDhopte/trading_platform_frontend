@@ -82,10 +82,10 @@ const TradingDashboard = () => {
     const [tradeSymbol, setTradeSymbol] = useState('');
     const [tradeQuantity, setTradeQuantity] = useState('');
 
-    const showNotification = ((title: string, options: NotificationOptions) => {
+    const showNotification = useCallback((title: string, options: NotificationOptions) => {
       if(!user || !user.NotificationsOn) return;
       showNotificationUtil(title, options);
-    });
+    },[user]);
 
     const quickTradeBuy = async () => {
       if (!user?.UserID || !tradeSymbol || !tradeQuantity) return;
@@ -232,7 +232,7 @@ const TradingDashboard = () => {
         });
       }
     }
-  }, []);
+  }, [showNotification]);
 
   const setDashboardData = useCallback((data: Dashboard) => {
     setStocks(data.Stocks == null ? [] : data.Stocks);
