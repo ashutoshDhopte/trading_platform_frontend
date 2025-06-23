@@ -2,17 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useUser } from '@/components/UserContext';
 import { useLoading } from '@/components/LoadingContext';
 import { formatCurrency } from '@/lib/util';
 import { getStocks, getStockNews } from '@/lib/api';
-import { Stock, MarketData, NewsArticle, StockData } from '@/type/model';
-import { ChevronDown, TrendingUp, TrendingDown, MessageCircle, ExternalLink } from 'lucide-react';
+import { Stock, MarketData } from '@/type/model';
+import { ChevronDown, MessageCircle, ExternalLink } from 'lucide-react';
 import { getSession } from 'next-auth/react';
 
 
 const MarketsPage = () => {
-    const { user } = useUser();
     const { showLoading, hideLoading } = useLoading();
     const searchParams = useSearchParams();
     const stockParam = searchParams.get('stock');
@@ -22,13 +20,11 @@ const MarketsPage = () => {
     const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
     const [marketData, setMarketData] = useState<MarketData | null>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [stockSearchTerm, setStockSearchTerm] = useState('');
     const [chatMessages, setChatMessages] = useState([
         { id: 1, type: 'bot', message: 'Hello! I\'m your market assistant. How can I help you with market analysis today?' }
     ]);
     const [chatInput, setChatInput] = useState('');
     const [isLoadingOlderNews, setIsLoadingOlderNews] = useState(false);
-    const [marketWsStatus, setMarketWsStatus] = useState(true);
     const [expandedArticles, setExpandedArticles] = useState<Set<number>>(new Set());
     const [newArticlesCount, setNewArticlesCount] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
@@ -50,14 +46,11 @@ const MarketsPage = () => {
                     const foundStock = stocks.find(stock => stock.Ticker === stockParam);
                     if (foundStock) {
                         setSelectedStock(foundStock);
-                        setStockSearchTerm(foundStock.Ticker);
                     } else {
                         setSelectedStock(stocks[0]);
-                        setStockSearchTerm(stocks[0].Ticker);
                     }
                 } else {
                     setSelectedStock(stocks[0]);
-                    setStockSearchTerm(stocks[0].Ticker);
                 }
                 
                 // Reset pagination state
@@ -87,7 +80,6 @@ const MarketsPage = () => {
         // Event handler for when the connection is successfully opened.
         ws.onopen = () => {
             console.log('Market WebSocket connection established.');
-            setMarketWsStatus(true);
         };
 
         // Event handler for receiving messages from the server.
@@ -136,13 +128,11 @@ const MarketsPage = () => {
         // Event handler for any errors that occur.
         ws.onerror = (error) => {
             console.error('WebSocket error:', error);
-            setMarketWsStatus(false);
         };
 
         // Event handler for when the connection is closed.
         ws.onclose = () => {
             console.log('Market WebSocket connection closed.');
-            setMarketWsStatus(false);
         };
 
         // This is a cleanup function.
@@ -265,12 +255,6 @@ const MarketsPage = () => {
         return '💥';
     };
 
-    // Filter stocks for dropdown
-    const filteredStocks = availableStocks.filter(stock => 
-        stock.Ticker.toLowerCase().includes(stockSearchTerm.toLowerCase()) ||
-        stock.Name.toLowerCase().includes(stockSearchTerm.toLowerCase())
-    ).slice(0, 8);
-
     return (
         <div className="min-h-screen bg-gray-900 text-white pt-23 px-6 lg:px-12">
             
@@ -304,7 +288,6 @@ const MarketsPage = () => {
                                             
                                             // Set new stock
                                             setSelectedStock(stock);
-                                            setStockSearchTerm(stock.Ticker);
                                             setIsDropdownOpen(false);
                                             
                                             // Reset pagination and UI state for new stock
@@ -340,7 +323,17 @@ const MarketsPage = () => {
                             </div>
                             
                             <div>
-                                <div className="text-white/70 text-sm mb-1">Sentiment - 14EMA (Exponential Moving Avg.)</div>
+                                <div className="text-white/70 text-sm mb-1 flex items-center gap-1">
+                                    Sentiment 14EMA
+                                    <div className="relative group">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 px-2 py-2 bg-gray-900 text-white/70 text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap">
+                                            14 days Exponential Moving Average
+                                        </div>
+                                    </div>
+                                </div>
                                 <div className={`text-xl font-bold flex items-center gap-2 ${getSentimentColor(marketData?.Stock?.OverallSentimentScore ?? 0)}`}>
                                     <span className="text-2xl">{getSentimentEmoji(marketData?.Stock?.OverallSentimentScore ?? 0)}</span>
                                     <span>{marketData?.Stock?.OverallSentimentScore ? `${(marketData.Stock.OverallSentimentScore * 100).toFixed(0)}%` : 'Loading...'}</span>
@@ -362,16 +355,25 @@ const MarketsPage = () => {
                                     <h2 className="text-xl font-bold">Market News</h2>
                                     <p className="text-white/70 text-sm mt-1">Latest news and sentiment analysis for {selectedStock?.Ticker}</p>
                                 </div>
-                                <div className="flex items-center gap-4 pt-3">
+                                <div>
+                                    <p className="text-white/70 text-sm mt-1">
+                                        Real-time news from{' '}
+                                        <a href="https://finnhub.io" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-300 transition-colors underline inline-flex items-center gap-1">
+                                            finnhub.io
+                                            <ExternalLink size={14} />
+                                        </a>
+                                        &nbsp;(Updated every 15 mins)
+                                    </p>
                                     <p className="text-white/70 text-sm mt-1">
                                         Sentiment calculated using{' '}
                                         <a 
                                             href="https://huggingface.co/mrm8488/distilroberta-finetuned-financial-news-sentiment-analysis" 
                                             target="_blank" 
                                             rel="noopener noreferrer"
-                                            className="text-cyan-400 hover:text-cyan-300 transition-colors underline"
+                                            className="text-cyan-400 hover:text-cyan-300 transition-colors underline inline-flex items-center gap-1"
                                         >
                                             pre-trained model
+                                            <ExternalLink size={14} />
                                         </a>
                                     </p>
                                     {newArticlesCount > 0 && (
@@ -459,7 +461,7 @@ const MarketsPage = () => {
                                                 <ExternalLink size={14} />
                                             </a>
                                             <span className="text-white/50 text-xs">
-                                                {new Date(news.publicationTime).toLocaleDateString()}
+                                                {news.publicationTime}
                                             </span>
                                         </div>
                                     </div>

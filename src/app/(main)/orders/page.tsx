@@ -61,8 +61,8 @@ const OrdersPage = () => {
     }, [userId]);
 
     return (
-        <section className="w-full relative section-padding flex min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-indigo-900 text-white">
-            <div className="w-11/12 max-w-screen-xl mx-auto p-5 mt-20">
+        <section className="w-full relative section-padding flex min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-indigo-900 text-white mt-33">
+            <div className="w-11/12 max-w-screen-xl mx-auto p-5">
 
 
                 {/* Header */}
