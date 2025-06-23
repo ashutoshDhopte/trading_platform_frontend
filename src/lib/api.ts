@@ -225,7 +225,7 @@ export const updateUserSettings = async (userId: number, settings: Map<string, u
 
   const data = res.data as ApiResponse;
   // console.log(data);
-  if(data.Success){
+  if(!data.Success){
     console.error(data.ErrorMessage);
     return null;
   }

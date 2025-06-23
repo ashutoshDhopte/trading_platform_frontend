@@ -122,6 +122,7 @@ const TradingDashboard = () => {
           // Optionally, refresh holdings or stocks after a successful trade
           setTradeSymbol('');
           setTradeQuantity('');
+          setStockSearchTerm('');
           loadDashboard()
           showNotification(`Trade Executed!!`, {
             body: `Successfully purchased ${quantity} shares of ${tradeSymbol}`
@@ -149,6 +150,7 @@ const TradingDashboard = () => {
           // Optionally, refresh holdings or stocks after a successful trade
           setTradeSymbol('');
           setTradeQuantity('');
+          setStockSearchTerm('');
           loadDashboard()
           showNotification(`Trade Executed!!`, {
             body: `Successfully sold ${quantity} shares of ${tradeSymbol}`
