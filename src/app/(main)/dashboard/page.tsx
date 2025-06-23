@@ -547,7 +547,7 @@ const TradingDashboard = () => {
   }, [lastUpdateTime]);
 
   return (
-    <section className="relative section-padding flex min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-indigo-900 text-white mt-5">
+    <section className="relative section-padding flex min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-indigo-900 text-white mt-17">
       <div className="w-full px-6 lg:px-12 pt-20 relative">
 
 
