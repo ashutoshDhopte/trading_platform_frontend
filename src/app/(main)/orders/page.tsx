@@ -62,20 +62,22 @@ const OrdersPage = () => {
 
     return (
         <section className="w-full relative section-padding flex min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-indigo-900 text-white">
-            <div className="w-11/12 max-w-screen-xl mx-auto p-5 mt-35">
+            <div className="w-11/12 max-w-screen-xl mx-auto p-5 mt-20">
 
 
                 {/* Header */}
-                <div className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-xl hover:transform hover:-translate-y-1 transition-all duration-300 hover:border-white/20 hover:shadow-2xl">
-                    <div className={`${gridCols} mb-5 px-4`} style={{ gridTemplateColumns: '2fr 2fr 1fr 1fr 2fr 2fr' }}>
-                        <div className="font-bold text-base text-muted-foreground/80 tracking-wide uppercase">Ticker</div>
-                        <div className="font-bold text-base text-muted-foreground/80 tracking-wide uppercase">Date</div>
-                        <div className="font-bold text-base text-muted-foreground/80 tracking-wide uppercase">Trade</div>
-                        <div className="font-bold text-base text-muted-foreground/80 text-right tracking-wide uppercase">Quantity</div>
-                        <div className="font-bold text-base text-muted-foreground/80 text-right tracking-wide uppercase">Price</div>
-                        <div className="font-bold text-base text-muted-foreground/80 text-right tracking-wide uppercase">Total Value</div>
+                <div className="w-full bg-white/[0.03] border border-white/10 rounded-2xl backdrop-blur-xl hover:transform hover:-translate-y-1 transition-all duration-300 hover:border-white/20 hover:shadow-2xl h-[650px] flex flex-col">
+                    <div className="p-6 border-b border-white/10">
+                        <div className={`${gridCols} px-4`} style={{ gridTemplateColumns: '2fr 2fr 1fr 1fr 2fr 2fr' }}>
+                            <div className="font-bold text-base text-muted-foreground/80 tracking-wide uppercase">Ticker</div>
+                            <div className="font-bold text-base text-muted-foreground/80 tracking-wide uppercase">Date</div>
+                            <div className="font-bold text-base text-muted-foreground/80 tracking-wide uppercase">Trade</div>
+                            <div className="font-bold text-base text-muted-foreground/80 text-right tracking-wide uppercase">Quantity</div>
+                            <div className="font-bold text-base text-muted-foreground/80 text-right tracking-wide uppercase">Price</div>
+                            <div className="font-bold text-base text-muted-foreground/80 text-right tracking-wide uppercase">Total Value</div>
+                        </div>
                     </div>
-                    <div className="w-full mx-auto">
+                    <div className="flex-1 overflow-y-auto p-6">
                         {orders.map((order) => (
                             <OrderCard key={order.OrderID} order={order} />
                         ))}

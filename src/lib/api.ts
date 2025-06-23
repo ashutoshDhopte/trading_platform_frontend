@@ -1,4 +1,4 @@
-import { ApiResponse, Auth, Dashboard, Order, User } from '@/type/model';
+import { ApiResponse, Auth, Dashboard, Order, User, Stock, NewsArticle } from '@/type/model';
 import axios from 'axios';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
@@ -225,10 +225,46 @@ export const updateUserSettings = async (userId: number, settings: Map<string, u
 
   const data = res.data as ApiResponse;
   // console.log(data);
-  if(!data.Success){
+  if(data.Success){
     console.error(data.ErrorMessage);
     return null;
   }
 
   return data.Data as User;
+}
+
+export const getStocks = async (token: string): Promise<Stock[]> => {
+  const res = await axios.get(`${API_BASE}/stocks`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  });
+
+  const data = res.data as ApiResponse;
+  if(data.Success && data.Data){
+    return data.Data as Stock[];
+  }
+
+  return [];
+}
+
+export const getStockNews = async (stockId: number, page: number, token: string): Promise<NewsArticle[]> => {
+  const res = await axios.get(`${API_BASE}/stock-news`, {
+    params: {
+      stockId: stockId,
+      page: page
+    },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  });
+
+  const data = res.data as ApiResponse;
+  if(data.Success && data.Data){
+    return data.Data as NewsArticle[];
+  }
+
+  return [];
 }

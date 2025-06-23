@@ -2,16 +2,17 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { addStockToWatchlist, buyStocks, deleteStockFromWatchlist, getDashboardData, sellStocks } from '@/lib/api';
-import { Dashboard, Holding, Stock, StockWatchlist } from '@/type/model';
-import { useState, useEffect, Key, use } from 'react';
+import { Dashboard, Holding, Stock, StockWatchlist, User } from '@/type/model';
+import { useState, useEffect, Key, use, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { formatCurrency } from '@/lib/util';
 import { useUser } from '@/components/UserContext';
 import { useCallback } from 'react';
 import { useRef } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, ExternalLink } from 'lucide-react';
 import { showNotificationUtil } from '@/lib/notification';
 import { getSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 // Popup component for adding to watchlist
 const StockWatchlistPopup = ({ x, y, stockPrice, onAdd, setPopup }: 
@@ -71,6 +72,7 @@ const StockWatchlistPopup = ({ x, y, stockPrice, onAdd, setPopup }:
 const TradingDashboard = () => {
   
     const {user} = useUser();
+    const router = useRouter();
     const [stocks, setStocks] = useState<Stock[]>([]);
     const [holdings, setHoldings] = useState<Holding[]>([]);
     const [portfolioValue, setPortfolioValue] = useState(0.00);
@@ -81,6 +83,24 @@ const TradingDashboard = () => {
 
     const [tradeSymbol, setTradeSymbol] = useState('');
     const [tradeQuantity, setTradeQuantity] = useState('');
+    const [isStockDropdownOpen, setIsStockDropdownOpen] = useState(false);
+    const [stockSearchTerm, setStockSearchTerm] = useState('');
+
+    // Predefined quantity options
+    const quantityOptions = [10, 25, 50, 100, 250];
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as HTMLElement;
+            if (!target.closest('.stock-dropdown')) {
+                setIsStockDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const showNotification = useCallback((title: string, options: NotificationOptions) => {
       if(!user || !user.NotificationsOn) return;
@@ -143,27 +163,84 @@ const TradingDashboard = () => {
 
 
   // Update StockItem to accept onEyeClick: (e: React.MouseEvent) => void
-  const StockItem = ({ stock, onClick, onEyeClick }: { stock: Stock; onClick: () => void; onEyeClick: (e: React.MouseEvent) => void }) => (
-    <div 
-      className="flex justify-between items-center p-4 bg-white/[0.03] rounded-xl border border-white/5 transition-all duration-300 cursor-pointer"
-      onClick={onClick}
-    >
-      <div className="flex items-center gap-3">
-      <div>
-        <div className="font-bold text-base">{stock.Ticker}</div>
-        <div className="text-white/70 text-sm">{stock.Name}</div>
-      </div>
-      </div>
-      <div className="text-right flex items-center gap-2">
-        <div className="mr-2">
-          <div className="font-bold text-base">{formatCurrency(stock.CurrentPriceDollars)}</div>
-          <div className={`text-sm mt-1 ${stock.ChangedPriceDollars >= 0 ? 'text-green-400' : 'text-red-400'}`}>{stock.ChangedPriceDollars >= 0 ? '+' : ''}{formatCurrency(stock.ChangedPriceDollars)} ({stock.ChangedPercent >= 0 ? '+' : ''}{stock.ChangedPercent.toFixed(2)}%)</div>
+  const StockItem = ({ stock, onClick, onEyeClick }: { stock: Stock; onClick: () => void; onEyeClick: (e: React.MouseEvent) => void }) => {
+    const handleNavigateToMarkets = (e: React.MouseEvent) => {
+      e.stopPropagation(); // Prevent triggering the main onClick
+      // Set the active tab to Markets before navigating
+      const marketsTab = document.querySelector('[data-tab="Markets"]') as HTMLElement;
+      if (marketsTab) {
+        marketsTab.click(); // This will trigger the onClick handler that sets activeTab
+      }
+      router.push(`/markets?stock=${stock.Ticker}&userId=${user?.UserID}`);
+    };
+
+    // Check if stock data is valid
+    const hasValidPrice = typeof stock.CurrentPriceDollars === 'number' && stock.CurrentPriceDollars > 0;
+    const hasValidChange = typeof stock.ChangedPriceDollars === 'number' && typeof stock.ChangedPercent === 'number';
+
+    return (
+      <div 
+        className="flex justify-between items-center p-4 bg-white/[0.03] rounded-xl border border-white/5 transition-all duration-300 cursor-pointer"
+        onClick={onClick}
+      >
+        <div className="flex items-center gap-3 flex-1">
+          {/* AI Analysis Icon */}
+          <div 
+            className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400/20 to-purple-500/20 border border-cyan-400/30 cursor-pointer transition-all duration-300 hover:scale-110 hover:bg-gradient-to-br hover:from-cyan-400/30 hover:to-purple-500/30"
+            onClick={handleNavigateToMarkets}
+            title="AI Market Analysis"
+          >
+            <svg 
+              width="16" 
+              height="16" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              className="text-cyan-400"
+            >
+              <path 
+                d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" 
+                fill="currentColor"
+              />
+              <path 
+                d="M19 15L19.74 18.26L23 19L19.74 19.74L19 23L18.26 19.74L15 19L18.26 18.26L19 15Z" 
+                fill="currentColor"
+              />
+              <path 
+                d="M5 15L5.74 18.26L9 19L5.74 19.74L5 23L4.26 19.74L1 19L4.26 18.26L5 15Z" 
+                fill="currentColor"
+              />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-bold text-base">{stock.Ticker}</div>
+            <div className="text-white/70 text-sm">{stock.Name}</div>
+          </div>
         </div>
-        {/* Eye Icon - always visible */}
-        <Eye className="text-gray-400 cursor-pointer" onClick={onEyeClick}/>
+        <div className="text-right flex items-center gap-4 ml-4">
+          {/* Price and Change Info - Now side by side */}
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <div className="font-bold text-base">
+                {hasValidPrice ? formatCurrency(stock.CurrentPriceDollars) : 'Loading...'}
+              </div>
+            </div>
+            {hasValidChange && (
+              <>
+                <div className={`text-sm ${stock.ChangedPriceDollars >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {stock.ChangedPriceDollars >= 0 ? '+' : ''}{formatCurrency(stock.ChangedPriceDollars)}
+                </div>
+                <div className={`text-sm ${stock.ChangedPercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  ({stock.ChangedPercent >= 0 ? '+' : ''}{stock.ChangedPercent.toFixed(2)}%)
+                </div>
+              </>
+            )}
+          </div>
+          {/* Eye Icon - always visible */}
+          <Eye className="text-gray-400 cursor-pointer" onClick={onEyeClick}/>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const HoldingItem = ({ holding } : { holding: Holding}) => (
     <div className="flex justify-between items-center py-4 border-b border-white/5 last:border-b-0">
@@ -227,15 +304,29 @@ const TradingDashboard = () => {
   const watchlistNotification = useCallback((stockWatchlist: StockWatchlist[]) => {
     for(const watch of stockWatchlist) {
       if (watch.DiffPercent == 0) {
-        showNotification(`Watchlist Alert: ${watch.StockTicker}`, {
-          body: `Target price (${formatCurrency(watch.TargetPriceDollars)}) acheived!!`
-        });
+        // Call showNotificationUtil directly to avoid circular dependency
+        if(user && user.NotificationsOn) {
+          showNotificationUtil(`Watchlist Alert: ${watch.StockTicker}`, {
+            body: `Target price (${formatCurrency(watch.TargetPriceDollars)}) acheived!!`
+          });
+        }
       }
     }
-  }, [showNotification]);
+  }, [user]); // Only depend on user, not showNotification
 
   const setDashboardData = useCallback((data: Dashboard) => {
-    setStocks(data.Stocks == null ? [] : data.Stocks);
+    // Ensure stocks have valid numeric values
+    const validatedStocks = (data.Stocks || []).map(stock => ({
+      ...stock,
+      CurrentPriceDollars: typeof stock.CurrentPriceDollars === 'number' ? stock.CurrentPriceDollars : 0,
+      ChangedPriceDollars: typeof stock.ChangedPriceDollars === 'number' ? stock.ChangedPriceDollars : 0,
+      ChangedPercent: typeof stock.ChangedPercent === 'number' ? stock.ChangedPercent : 0,
+      OpeningPriceDollars: typeof stock.OpeningPriceDollars === 'number' ? stock.OpeningPriceDollars : 0
+    }));
+    
+    console.log('Setting dashboard data with validated stocks:', validatedStocks);
+    
+    setStocks(validatedStocks);
     setHoldings(data.Holdings == null ? [] : data.Holdings);
     setPortfolioValue(data.PortfolioValueDollars || 0);
     setTotalPnL(data.TotalPnLDollars || 0);
@@ -243,8 +334,9 @@ const TradingDashboard = () => {
     setTotalHoldingValue(data.TotalHoldingValueDollars || 0);
     setWatchList(data.StockWatchlist == null ? [] : data.StockWatchlist);
     setLastUpdateTime(new Date())
+    // Call watchlistNotification separately to avoid circular dependency
     watchlistNotification(data.StockWatchlist || []);
-  }, [watchlistNotification])
+  }, []) // No dependencies to avoid circular dependency
 
   const loadDashboard = useCallback(async () => {
     const session = await getSession(); 
@@ -255,16 +347,19 @@ const TradingDashboard = () => {
       return;
     }
     setDashboardData(data);
-  }, [setDashboardData, user]);
+  }, [user?.UserID]); // Only depend on user?.UserID, not setDashboardData
 
   useEffect(() => {
-    loadDashboard();
-  }, [loadDashboard, user]);
+    if (user?.UserID) {
+      loadDashboard();
+    }
+  }, [loadDashboard]); // Only depend on loadDashboard
 
   const [dashboardWsStatus, setDashboardWsStatus] = useState(true);
   const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
+  const [isWebSocketDataLoading, setIsWebSocketDataLoading] = useState(false);
   const searchParams = useSearchParams();
-  const userIdForWS = Number(searchParams.get('userId')) || 0;
+  const userIdForWS = useMemo(() => Number(searchParams.get('userId')) || 0, [searchParams]);
 
   useEffect(() => {
     // This effect runs once when the component mounts.
@@ -275,6 +370,15 @@ const TradingDashboard = () => {
     // from an environment variable, e.g., `process.env.NEXT_PUBLIC_WEBSOCKET_URL`.
 
     const wsUrl = process.env.NEXT_PUBLIC_API_WS;
+    
+    // Debug: Log the WebSocket URL being used
+    console.log('Attempting to connect to WebSocket:', wsUrl+`/dashboard?userId=${userIdForWS}`);
+    
+    // Check if we have a valid userId before attempting connection
+    if (!userIdForWS || userIdForWS === 0) {
+      console.log('No valid userId, skipping WebSocket connection');
+      return;
+    }
 
     // Create a new WebSocket connection.
     const ws = new WebSocket(wsUrl+`/dashboard?userId=${userIdForWS}`);
@@ -288,26 +392,69 @@ const TradingDashboard = () => {
     // Event handler for receiving messages from the server.
     ws.onmessage = (event) => {
       try {
+        setIsWebSocketDataLoading(true);
         // The data from the server is a JSON string. We need to parse it.
-        const dashboard: Dashboard = JSON.parse(event.data);
+        const rawData = JSON.parse(event.data);
+        console.log('Raw WebSocket data received:', rawData);
         
-        // Update the component's state with the new list of stocks.
-        // This will cause the UI to re-render with the new prices.
-        setDashboardData(dashboard);
+        // Check if the data has the expected structure
+        if (rawData && typeof rawData === 'object') {
+          // If the data is already in Dashboard format, use it directly
+          if (rawData.Stocks && Array.isArray(rawData.Stocks)) {
+            console.log('Data is in Dashboard format, using directly');
+            const dashboard: Dashboard = rawData;
+            setDashboardData(dashboard);
+          } 
+          // If the data is just an array of stocks, wrap it in a Dashboard object
+          else if (Array.isArray(rawData)) {
+            console.log('Data is array of stocks, wrapping in Dashboard format');
+            const dashboard: Dashboard = {
+              User: user || new User(0, '', '', 0, '', '', false),
+              Stocks: rawData,
+              Holdings: holdings, // Keep existing holdings
+              StockWatchlist: watchlist, // Keep existing watchlist
+              TotalHoldingValueDollars: totalHoldingValue,
+              PortfolioValueDollars: portfolioValue,
+              TotalPnLDollars: totalPnL,
+              TotalReturnPercent: totalPnLPercent
+            };
+            setDashboardData(dashboard);
+          }
+          // If it's a single stock update, update the specific stock
+          else if (rawData.StockID && rawData.Ticker) {
+            console.log('Data is single stock update, updating specific stock');
+            setStocks(prevStocks => 
+              prevStocks.map(stock => 
+                stock.StockID === rawData.StockID ? rawData : stock
+              )
+            );
+          }
+          else {
+            console.log('Unknown data format, attempting to use as Dashboard');
+            const dashboard: Dashboard = rawData;
+            setDashboardData(dashboard);
+          }
+        } else {
+          console.error('Invalid WebSocket data format:', rawData);
+        }
       } catch (error) {
         console.error('Error parsing WebSocket message:', error);
+        console.error('Raw message data:', event.data);
+      } finally {
+        setIsWebSocketDataLoading(false);
       }
     };
 
     // Event handler for any errors that occur.
     ws.onerror = (error) => {
       console.error('WebSocket error:', error);
+      console.error('WebSocket URL attempted:', wsUrl+`/dashboard?userId=${userIdForWS}`);
       setDashboardWsStatus(false);
     };
 
     // Event handler for when the connection is closed.
-    ws.onclose = () => {
-      console.log('WebSocket connection closed.');
+    ws.onclose = (event) => {
+      console.log('WebSocket connection closed. Code:', event.code, 'Reason:', event.reason);
       setDashboardWsStatus(false);
     };
 
@@ -317,7 +464,7 @@ const TradingDashboard = () => {
     return () => {
       ws.close();
     };
-  }, [setDashboardData, userIdForWS]); // The empty dependency array `[]` ensures this effect runs only once on mount.
+  }, [userIdForWS]); // Only depend on userIdForWS, not setDashboardData which changes on every render
 
   const addStockToWatchlistApiCall = async (stockId: number, targetPriceStr: string) => {
 
@@ -400,16 +547,9 @@ const TradingDashboard = () => {
   }, [lastUpdateTime]);
 
   return (
-    <section className="relative section-padding flex min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-indigo-900 text-white">
-      <div className="max-w-7xl mx-auto p-5 mt-35 relative">
+    <section className="relative section-padding flex min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-indigo-900 text-white mt-5">
+      <div className="w-full px-6 lg:px-12 pt-20 relative">
 
-        {/* Market Status */}
-        {/* <div className="flex items-center gap-2 p-3 bg-green-400/10 border border-green-400/30 rounded-lg mb-8">
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-          <span>Market Open • NYSE</span>
-        </div> */}
-
-        
 
         {/* Main Content */}
         <div className="grid lg:grid-cols-3 gap-8">
@@ -438,7 +578,12 @@ const TradingDashboard = () => {
                 <h3 className="text-xl font-semibold">Market Overview</h3>
                 <div className="justify-end flex items-center">
                   {dashboardWsStatus ? (
-                    <div className="w-5 h-5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+                      {isWebSocketDataLoading && (
+                        <span className="text-xs text-cyan-400">Processing...</span>
+                      )}
+                    </div>
                   ) : (
                     <svg
                       className="w-5 h-5 ml-2 text-red-500"
@@ -494,20 +639,72 @@ const TradingDashboard = () => {
             <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-xl hover:transform hover:-translate-y-1 transition-all duration-300 hover:border-white/20 hover:shadow-2xl">
               <h3 className="text-xl font-semibold mb-5">Quick Trade</h3>
               <div className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="Enter symbol (e.g., AAPL)"
-                  value={tradeSymbol}
-                  onChange={(e) => setTradeSymbol(e.target.value)}
-                  className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-cyan-400 focus:outline-none transition-colors"
-                />
-                <input
-                  type="number"
-                  placeholder="Quantity"
-                  value={tradeQuantity}
-                  onChange={(e) => setTradeQuantity(e.target.value)}
-                  className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-cyan-400 focus:outline-none transition-colors"
-                />
+                {/* Stock Dropdown and Quantity Input - Side by Side */}
+                <div className="flex gap-3">
+                  {/* Stock Dropdown - 70% */}
+                  <div className="relative stock-dropdown z-[999] flex-[0.7]">
+                    <input
+                      type="text"
+                      placeholder="Search stock (e.g., AAPL)"
+                      value={stockSearchTerm}
+                      onChange={(e) => {
+                        setStockSearchTerm(e.target.value);
+                        setIsStockDropdownOpen(true);
+                      }}
+                      onFocus={() => setIsStockDropdownOpen(true)}
+                      className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-cyan-400 focus:outline-none transition-colors"
+                    />
+                    {isStockDropdownOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-gray-800 border border-white/10 rounded-xl backdrop-blur-lg z-50 max-h-40 overflow-y-auto">
+                        {stocks
+                          .filter(stock => 
+                            stock.Ticker.toLowerCase().includes(stockSearchTerm.toLowerCase()) ||
+                            stock.Name.toLowerCase().includes(stockSearchTerm.toLowerCase())
+                          )
+                          .slice(0, 8) // Limit to 8 results for better UX
+                          .map((stock) => (
+                            <button
+                              key={stock.StockID}
+                              onClick={() => {
+                                setTradeSymbol(stock.Ticker);
+                                setStockSearchTerm(stock.Ticker);
+                                setIsStockDropdownOpen(false);
+                              }}
+                              className="w-full p-3 text-left hover:bg-white/[0.05] transition-colors border-b border-white/5 last:border-b-0"
+                            >
+                              <div className="font-bold">{stock.Ticker}</div>
+                              <div className="text-white/70 text-sm">{stock.Name}</div>
+                            </button>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Quantity Input - 30% */}
+                  <div className="flex-[0.3]">
+                    <input
+                      type="number"
+                      placeholder="Qty"
+                      value={tradeQuantity}
+                      onChange={(e) => setTradeQuantity(e.target.value)}
+                      className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-cyan-400 focus:outline-none transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Quantity Buttons */}
+                <div className="flex flex-wrap gap-2">
+                  {quantityOptions.map((quantity) => (
+                    <button
+                      key={quantity}
+                      onClick={() => setTradeQuantity(quantity.toString())}
+                      className="px-4 py-2 bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 rounded-full text-sm text-white transition-all duration-300 hover:border-cyan-400/50"
+                    >
+                      {quantity}
+                    </button>
+                  ))}
+                </div>
+
                 <div className="flex gap-3">
                   <button className="flex-1 py-3 px-6 bg-gradient-to-r from-green-400 to-cyan-400 text-black rounded-lg font-semibold hover:transform hover:-translate-y-1 transition-all duration-300 hover:shadow-lg" onClick={quickTradeBuy}>
                     Buy
