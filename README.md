@@ -1,16 +1,16 @@
 # Trading Platform Simulator - Frontend
 
-This is the frontend for the Full-Stack Trading Platform Simulator, built with Next.js, React, and TypeScript. It provides a responsive and interactive user dashboard for simulating stock trades, viewing portfolio performance, receiving real-time market data updates, and managing a secure user session.
+This is the frontend for the Full-Stack Trading Platform Simulator, built with Next.js, React, and TypeScript. It provides a responsive and interactive user interface for simulating stock trades, viewing portfolio performance, and analyzing real-time market data and AI-driven news sentiment.
 
-[Try it](https://trade-sim-liard.vercel.app/)
+[Try the Live Application](https://trade-sim-liard.vercel.app/)
 
 ## Key Features
 
 - **Secure User Authentication:** A complete credentials-based login and registration system built with **NextAuth.js**, which securely manages user sessions.
-- **Interactive Dashboard:** Displays a user's total portfolio value, cash balance, and a detailed list of their stock holdings with current valuations after they log in.
-- **Real-time Data & Notifications:** Connects to a Go backend via WebSockets to receive live stock price updates and triggers **Browser Notifications** for important events like trade confirmations.
-- **Protected Trade Execution:** Simple and intuitive forms for submitting "buy" and "sell" orders to protected backend API endpoints, using JWTs for authorization.
-- **Modern Frontend Stack:** Built with the latest standards, including the Next.js App Router, TypeScript for type safety, and React hooks for state management.
+- **AI-Powered Market Analysis:** A dedicated "Markets" page displays real-time news from the Finnhub API, with sentiment scores (Positive/Neutral/Negative) for each article calculated by a custom Python AI microservice.
+- **Dynamic Data Visualization:** The dashboard displays a user's portfolio value and holdings, while the markets page shows a live-updating news feed with a 14-day EMA sentiment score for each stock.
+- **Real-time Communication:** Connects to a Go backend via WebSockets to receive live stock price updates, new market news, and triggers **Browser Notifications** for important events.
+- **Modern Frontend Stack:** Built with the latest standards, including the Next.js App Router, TypeScript for type safety, and features like paginated "load more" for news articles.
 
 ## Tech Stack
 
@@ -21,6 +21,13 @@ This is the frontend for the Full-Stack Trading Platform Simulator, built with N
 - **Styling:** Tailwind CSS
 - **API Communication:** REST (for actions) & WebSockets (for real-time data)
 
+## System Architecture
+
+This frontend is part of a polyglot microservices architecture:
+1.  **Next.js Frontend (This Repo):** The user interface, deployed on Vercel.
+2.  **Go Backend:** The core service for user logic, trading, and orchestrating data from other services.
+3.  **Python Sentiment Service:** A separate FastAPI service deployed on Hugging Face Spaces that analyzes news sentiment.
+
 ---
 
 ## Getting Started
@@ -30,8 +37,8 @@ Follow these instructions to get the frontend development server running on your
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) (version 18+ recommended)
-- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/) or [pnpm](https://pnpm.io/)
-- The [Go Backend Server](https://github.com/ashutoshDhopte/trading_platform_backend/) must be running locally for the frontend to authenticate, fetch data, and connect to WebSockets.
+- [npm](https://www.npmjs.com/) or another package manager
+- The [Go Backend Server](https://github.com/ashutoshDhopte/trading_platform_backend) must be running locally. The Go service fetches data from Finnhub and the Python service.
 
 ### Installation & Setup
 
@@ -41,13 +48,25 @@ Follow these instructions to get the frontend development server running on your
     cd trading-platform-frontend
     ```
 
+    **Other repositories**
+
+    Backend
+    ```bash
+    https://github.com/ashutoshDhopte/trading_platform_backend
+    ```
+
+    Sentiment Analysis
+    ```bash
+    https://huggingface.co/spaces/ashudhopte123/trading_platform_ml_huggingface/tree/main
+    ```
+
 2.  **Install Dependencies**
     ```bash
     npm install
     ```
 
 3.  **Configure Environment Variables**
-    The application needs to know the URLs for your local backend server and requires secrets for session management. Create a file named `.env.local` in the project's root directory. You can generate a strong `NEXTAUTH_SECRET` by running `openssl rand -base64 32` in your terminal.
+    Create a file named `.env.local` in the project's root directory. You'll need to generate a strong `NEXTAUTH_SECRET` by running `openssl rand -base64 32` in your terminal.
     
     ```env
     # .env.local file
@@ -74,8 +93,8 @@ Follow these instructions to get the frontend development server running on your
 
 ## How It Works
 
-- The application uses **NextAuth.js** to handle user sign-up and login. Upon successful authentication with the Go backend, NextAuth.js manages the user's session in the browser.
-- For protected actions like buying or selling stocks, a **JWT** obtained during login is sent in the `Authorization` header of the API request.
-- The dashboard establishes a **WebSocket** connection to the backend to receive a live stream of stock price updates, which dynamically re-renders the UI.
-- When the backend sends a specific event message (e.g., after a trade is executed), the frontend uses the Browser **Notification API** to alert the user.
+- The application uses **NextAuth.js** to handle user sign-up and login. Upon successful authentication, a JWT from the Go backend is used to authorize protected API requests.
+- The dashboard establishes a **WebSocket** connection to receive a live stream of stock prices, new market news, and trade confirmations.
+- The "Markets" page displays detailed analysis for each stock, including a news feed with AI-generated sentiment scores. The news list is paginated, allowing users to "load more" historical articles.
+- The frontend uses the Browser **Notification API** to alert users of important events, such as the arrival of new market news or completed trades.
 
