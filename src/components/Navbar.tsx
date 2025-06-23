@@ -13,8 +13,8 @@ import { getSession, signOut } from 'next-auth/react';
 // Create a map for tab names and their corresponding paths outside the component
 const tabPaths = [
     { name: 'Dashboard', path: '/dashboard' },
+    { name: 'Markets', path: '/markets' },
     // { name: 'Portfolio', path: '/' },
-    // { name: 'Markets', path: '/' },
     { name: 'Orders', path: '/orders' },
 ];
 
@@ -27,18 +27,23 @@ const Navbar = () => {
     
     useEffect(() => {
 
-        const currentPath = window.location.pathname.split('/')[1];
-        const foundTab = tabPaths.find(tab => tab.path.includes(currentPath));
+        const currentPath = window.location.pathname;
+        const foundTab = tabPaths.find(tab => currentPath.startsWith(tab.path));
         if (foundTab) 
             setActiveTab(foundTab.name)
         else 
             setActiveTab(tabPaths[0].name); // Set default tab only once
 
-
-
         const fetchUserById = async (id: number) => {
             const session = await getSession(); 
             const token = session?.backendToken || ""
+            
+            // Only make the API call if we have a valid token
+            if (!token) {
+                console.log('No session token available, skipping user fetch');
+                return;
+            }
+            
             try {
                 const userData = await getUserById(id, token);
                 if (userData) {
@@ -51,9 +56,12 @@ const Navbar = () => {
             }
         };
 
-        fetchUserById(userId);
+        // Only fetch user data if we have a valid userId
+        if (userId && userId > 0) {
+            fetchUserById(userId);
+        }
         
-    }, [setUser, userId]);
+    }, [userId]); // Only depend on userId, not user or setUser
 
     const updateUserSettingApiCall = async (userSettings: Map<string, unknown>) => {
         try {
@@ -145,6 +153,7 @@ const Navbar = () => {
                                     query: { userId: user?.UserID }
                                 }} 
                                 onClick={() => setActiveTab(tab.name)} 
+                                data-tab={tab.name}
                                 className={`py-3 border-b-2 transition-all duration-300 font-medium ${
                                     activeTab === tab.name 
                                         ? 'border-cyan-400 text-cyan-400' 
@@ -231,5 +240,4 @@ const Navbar = () => {
     )
 
 }
-
 export default Navbar;

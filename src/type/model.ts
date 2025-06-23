@@ -1,4 +1,3 @@
-
 export class User{
     constructor(
         public UserID: number,
@@ -85,4 +84,31 @@ export interface StockWatchlist {
 export interface Auth {
     UserId: number,
     Token: string
+}
+
+export interface NewsArticle {
+    newsArticleId: number;
+    ticker: string;
+    articleTitle: string;
+    articleUrl: string;
+    publicationTime: string;
+    sentimentScore: number;
+    articleSummary: string;
+}
+
+export interface StockData {
+    StockId: number;
+    Ticker: string;
+    Name: string;
+    OpeningPriceDollars: number;
+    CurrentPriceDollars: number;
+    ChangedPriceDollars: number;
+    ChangedPercent: number;
+    UpdatedAt: string;
+    OverallSentimentScore: number;
+}
+
+export interface MarketData {
+    Stock: StockData;
+    News: NewsArticle[];
 }
