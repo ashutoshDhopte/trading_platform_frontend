@@ -1,8 +1,12 @@
 # Trading Platform Simulator - Frontend
 
+[Try the Live Application](https://trade-sim-liard.vercel.app/)
+
+<img width="894" height="657" alt="Screenshot 2025-06-29 at 03 03 53" src="https://github.com/user-attachments/assets/925deb8f-8fd8-4522-b067-314a60dc717c" />
+
+
 This is the frontend for the Full-Stack Trading Platform Simulator, built with Next.js, React, and TypeScript. It provides a responsive and interactive user interface for simulating stock trades, viewing portfolio performance, and analyzing real-time market data and AI-driven news sentiment.
 
-[Try the Live Application](https://trade-sim-liard.vercel.app/)
 
 ## Key Features
 
