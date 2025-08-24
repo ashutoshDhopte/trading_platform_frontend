@@ -13,6 +13,7 @@ import { Eye, EyeOff, ExternalLink } from 'lucide-react';
 import { showNotificationUtil } from '@/lib/notification';
 import { getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { Console } from 'console';
 
 // Popup component for adding to watchlist
 const StockWatchlistPopup = ({ x, y, stockPrice, onAdd, setPopup }: 
@@ -396,45 +397,57 @@ const TradingDashboard = () => {
       try {
         setIsWebSocketDataLoading(true);
         // The data from the server is a JSON string. We need to parse it.
-        const rawData = JSON.parse(event.data);
+        let rawData = JSON.parse(event.data);
         console.log('Raw WebSocket data received:', rawData);
         
         // Check if the data has the expected structure
         if (rawData && typeof rawData === 'object') {
-          // If the data is already in Dashboard format, use it directly
-          if (rawData.Stocks && Array.isArray(rawData.Stocks)) {
-            console.log('Data is in Dashboard format, using directly');
-            const dashboard: Dashboard = rawData;
-            setDashboardData(dashboard);
-          } 
-          // If the data is just an array of stocks, wrap it in a Dashboard object
-          else if (Array.isArray(rawData)) {
-            console.log('Data is array of stocks, wrapping in Dashboard format');
-            const dashboard: Dashboard = {
-              User: user || new User(0, '', '', 0, '', '', false),
-              Stocks: rawData,
-              Holdings: holdings, // Keep existing holdings
-              StockWatchlist: watchlist, // Keep existing watchlist
-              TotalHoldingValueDollars: totalHoldingValue,
-              PortfolioValueDollars: portfolioValue,
-              TotalPnLDollars: totalPnL,
-              TotalReturnPercent: totalPnLPercent
-            };
-            setDashboardData(dashboard);
-          }
-          // If it's a single stock update, update the specific stock
-          else if (rawData.StockID && rawData.Ticker) {
-            console.log('Data is single stock update, updating specific stock');
-            setStocks(prevStocks => 
-              prevStocks.map(stock => 
-                stock.StockID === rawData.StockID ? rawData : stock
-              )
-            );
-          }
-          else {
-            console.log('Unknown data format, attempting to use as Dashboard');
-            const dashboard: Dashboard = rawData;
-            setDashboardData(dashboard);
+
+          if(rawData.event_type === "social") {
+            // Handle social event
+            console.log('Received social event:', rawData);
+
+            if (rawData.content) {
+              setActivityFeed(prev => [rawData.content, ...prev]);
+            }
+
+          }else{
+            rawData = rawData.content; // Unwrap data field if present
+            // If the data is already in Dashboard format, use it directly
+            if (rawData.Stocks && Array.isArray(rawData.Stocks)) {
+              console.log('Data is in Dashboard format, using directly');
+              const dashboard: Dashboard = rawData;
+              setDashboardData(dashboard);
+            } 
+            // If the data is just an array of stocks, wrap it in a Dashboard object
+            else if (Array.isArray(rawData)) {
+              console.log('Data is array of stocks, wrapping in Dashboard format');
+              const dashboard: Dashboard = {
+                User: user || new User(0, '', '', 0, '', '', false),
+                Stocks: rawData,
+                Holdings: holdings, // Keep existing holdings
+                StockWatchlist: watchlist, // Keep existing watchlist
+                TotalHoldingValueDollars: totalHoldingValue,
+                PortfolioValueDollars: portfolioValue,
+                TotalPnLDollars: totalPnL,
+                TotalReturnPercent: totalPnLPercent
+              };
+              setDashboardData(dashboard);
+            }
+            // If it's a single stock update, update the specific stock
+            else if (rawData.StockID && rawData.Ticker) {
+              console.log('Data is single stock update, updating specific stock');
+              setStocks(prevStocks => 
+                prevStocks.map(stock => 
+                  stock.StockID === rawData.StockID ? rawData : stock
+                )
+              );
+            }
+            else {
+              console.log('Unknown data format, attempting to use as Dashboard');
+              const dashboard: Dashboard = rawData;
+              setDashboardData(dashboard);
+            }
           }
         } else {
           console.error('Invalid WebSocket data format:', rawData);
@@ -548,6 +561,9 @@ const TradingDashboard = () => {
     );
   }, [lastUpdateTime]);
 
+  // Sample activity feed data
+  const [activityFeed, setActivityFeed] = useState<string[]>([]);
+
   return (
     <section className="relative section-padding flex min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-indigo-900 text-white mt-17">
       <div className="w-full px-6 lg:px-12 pt-20 relative">
@@ -618,6 +634,40 @@ const TradingDashboard = () => {
                 ))}
               </div>
             </div>
+
+            {/* Social Trading Activity Feed */}
+            <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 mb-8 backdrop-blur-xl hover:transform hover:-translate-y-1 transition-all duration-300 hover:border-white/20 hover:shadow-2xl">
+              <div className="flex justify-between items-center mb-5">
+                <h3 className="text-xl font-semibold">Live Social Trading Activity Feed</h3>
+                <div className="justify-end flex items-center">
+                  {dashboardWsStatus ? (
+                    <div className="w-5 h-5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <svg
+                      className="w-5 h-5 ml-2 text-red-500"
+                      fill="none"
+                      viewBox="0 0 20 20"
+                      stroke="currentColor"
+                    >
+                      <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="2" fill="none" />
+                      <line x1="10" y1="6" x2="10" y2="11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      <circle cx="10" cy="14" r="1" fill="currentColor" />
+                    </svg>
+                  )}
+                  <p className='pl-2 text-sm text-white/70'>Listening</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {activityFeed.map((entry, idx) => (
+                  <div key={idx} className="bg-white/5 rounded-lg p-4 border border-white/10 mb-2">
+                    {entry}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            
+
 
             {/* Chart */}
             <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-xl hover:transform hover:-translate-y-1 transition-all duration-300 hover:border-white/20 hover:shadow-2xl">
