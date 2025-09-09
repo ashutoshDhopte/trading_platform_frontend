@@ -78,6 +78,7 @@ export default function Home() {
 
   return (
     <div className="bg-gray-900 text-white min-h-screen flex flex-col justify-center items-center h-screen">
+      <h1 className="text-4xl font-bold p-4">You might have to wait for 60 secs after clicking the Login or Create Account button, to let the backend instance spin up.</h1>
       <p className="text-2xl mt-4">Welcome to your trading simulation platform</p>
       <form
         onSubmit={handleSubmit}
